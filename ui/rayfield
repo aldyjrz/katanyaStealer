@@ -843,7 +843,38 @@ local function getAssetUri(id: any): string
 	end
 	return assetUri
 end
+local dragging = false
+local dragStart, startPos
 
+local function anakDrag(frame)
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            if dragging then
+                local delta = input.Position - dragStart
+                frame.Position = UDim2.new(
+                    startPos.X.Scale,
+                    startPos.X.Offset + delta.X,
+                    startPos.Y.Scale,
+                    startPos.Y.Offset + delta.Y
+                )
+            end
+        end
+    end)
+end
 local function makeDraggable(object, dragObject, enableTaptic, tapticOffset)
 	local dragging = false
 	local relative = nil
@@ -1174,60 +1205,20 @@ local function closeSearch()
 end
 
 local function Hide(notify: boolean?)
-	 if MPrompt then
-    local UserInputService = game:GetService("UserInputService")
-    local TweenService = game:GetService("TweenService")
+	if MPrompt then
+		MPrompt.Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+		MPrompt.Position = UDim2.new(0.5, 0, 0, -50)
+		MPrompt.Size = UDim2.new(0, 40, 0, 10)
+		MPrompt.BackgroundTransparency = 1
+		MPrompt.Title.TextTransparency = 1
+		MPrompt.Visible = true
+		-- ✅ Setup draggable
+		MPrompt.Active = true
+		MPrompt.Draggable = true 
+				anakDrag(MPrompt)
 
-    -- Styling awal
-    MPrompt.Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    MPrompt.Position = UDim2.new(0.5, 0, 0, -50)
-    MPrompt.Size = UDim2.new(0, 40, 0, 10)
-    MPrompt.BackgroundTransparency = 1
-    MPrompt.Title.TextTransparency = 1
-    MPrompt.Visible = true
+	end
 
-    -- ✅ Setup draggable
-    MPrompt.Active = true
-    MPrompt.Draggable = false -- kita pakai custom drag
-
-    local dragging = false
-    local dragStart, startPos
-
-    -- Fungsi untuk update posisi dengan smooth animasi
-    local function updateDrag(input)
-        local delta = input.Position - dragStart
-        local newPos = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
-
-        TweenService:Create(MPrompt, TweenInfo.new(0.05, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
-            Position = newPos
-        }):Play()
-    end
-
-    MPrompt.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = MPrompt.Position
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            updateDrag(input)
-        end
-    end)
-end
 	task.spawn(closeSearch)
 
 	Debounce = true
@@ -1242,13 +1233,13 @@ end
 	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 470, 0, 0)}):Play()
 	TweenService:Create(Main.Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 470, 0, 45)}):Play()
 	TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
-	TweenService:Create(Main.Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0.8}):Play()
+	TweenService:Create(Main.Topbar, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
 	TweenService:Create(Main.Topbar.Divider, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
 	TweenService:Create(Main.Topbar.CornerRepair, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {BackgroundTransparency = 1}):Play()
 	TweenService:Create(Main.Topbar.Title, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
 	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
 	TweenService:Create(Topbar.UIStroke, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
-	TweenService:Create(dragBarCosmetic, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 0.8}):Play()
+	TweenService:Create(dragBarCosmetic, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
 
 	if useMobilePrompt and MPrompt then
 		TweenService:Create(MPrompt, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 120, 0, 30), Position = UDim2.new(0.5, 0, 0, 20), BackgroundTransparency = 0.3}):Play()
@@ -1666,7 +1657,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	LoadingFrame.Subtitle.TextTransparency = 1
 
 	if Settings.ShowText then
-		MPrompt.Title.Text =  Settings.ShowText
+		MPrompt.Title.Text = 'SC '..Settings.ShowText
 	end
 
 	LoadingFrame.Version.TextTransparency = 1
@@ -1718,7 +1709,21 @@ function RayfieldLibrary:CreateWindow(Settings)
 	Topbar.Visible = false
 	Elements.Visible = false
 	LoadingFrame.Visible = true
- 
+
+	if not Settings.DisableRayfieldPrompts then
+		task.spawn(function()
+			while true do
+				task.wait(math.random(180, 600))
+				RayfieldLibrary:Notify({
+					Title = "AldyToi",
+					Content = "Enjoying this SCRIPT? \nFollow me on Tiktok to get latest updates! @aldytoi", 
+					Duration = 2,
+					Image = 4370033185,
+				})
+			end
+		end)
+	end
+
 	pcall(function()
 		if not Settings.ConfigurationSaving.FileName then
 			Settings.ConfigurationSaving.FileName = tostring(game.PlaceId)
@@ -2891,28 +2896,6 @@ function RayfieldLibrary:CreateWindow(Settings)
 							Debounce = true
 						end
 
-                          -- Tambahkan centang ✅ untuk MultipleOptions
-     -- Centang hanya di opsi yang dipilih
-    for _, optionButton in ipairs(Dropdown.DropdownFrame:GetChildren()) do
-        if optionButton:IsA("TextButton") then
-            local checkmark = optionButton:FindFirstChild("Checkmark")
-            if not checkmark then
-                checkmark = Instance.new("TextLabel")
-                checkmark.Name = "Checkmark"
-                checkmark.Text = "✅"
-                checkmark.Font = Enum.Font.GothamBold
-                checkmark.TextSize = 14
-                checkmark.TextColor3 = Color3.fromRGB(255, 255, 255)
-                checkmark.BackgroundTransparency = 1
-                checkmark.Size = UDim2.new(0, 20, 1, 0)
-                checkmark.Position = UDim2.new(1, -20, 0, 0)
-                checkmark.TextXAlignment = Enum.TextXAlignment.Center
-                checkmark.Parent = optionButton
-            end
-            -- Visible hanya jika option ada di CurrentlySelected
-            checkmark.Visible = table.find(DropdownSettings.CurrentOption, optionButton.Name) ~= nil
-        end
-    end
 
 						local Success, Response = pcall(function()
 							DropdownSettings.Callback(DropdownSettings.CurrentOption)
