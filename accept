@@ -1,0 +1,35 @@
+
+-- Fungsi untuk ON/OFF hook
+getgenv().ToggleAutoTrade = function(state)
+    local TC = getgenv().TradeCache
+    if not TC then return end
+
+    if state and not TC.hooked then
+        -- ✅ Pasang hook hanya sekali
+        TC.hooked = true
+        TC.originalFirePrompt = TC.PromptController.FirePrompt
+        TC.oldFirePrompt = hookfunction(TC.originalFirePrompt, function(self, promptText, ...)
+            if type(promptText) == "string" 
+            and (promptText:find("Accept") and promptText:find("from:") or promptText:find("to give")) then
+                return TC.Promise.resolve(true)
+            end
+            return TC.oldFirePrompt(self, promptText, ...)
+        end)
+
+    elseif not state and TC.hooked then
+        -- ✅ Restore original
+        hookfunction(TC.PromptController.FirePrompt, TC.originalFirePrompt)
+        TC.oldFirePrompt = nil
+        TC.hooked = false
+    end
+end
+
+-- Toggle UI
+getgenv().AutoAcceptTrade = getgenv().Tabs.PlayerSetTab:CreateToggle({
+    Name = "Auto Accept Prompt Trade",
+    CurrentValue = false,
+    Flag = "AutoAcceptTrade",
+    Callback = function(value)
+        getgenv().ToggleAutoTrade(value)
+    end
+})
