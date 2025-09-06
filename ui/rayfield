@@ -2207,7 +2207,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 			return ButtonValue
 		end
 
-		-- ColorPicker
+		-- ColorPickerOk
 		function Tab:CreateColorPicker(ColorPickerSettings) -- by Throit
 			ColorPickerSettings.Type = "ColorPicker"
 			local ColorPicker = Elements.Template.ColorPicker:Clone()
