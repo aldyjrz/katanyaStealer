@@ -842,11 +842,13 @@ local function getAssetUri(id: any): string
 		warn("Rayfield | The icon argument must either be an icon ID (number) or a Lucide icon name (string)")
 	end
 	return assetUri
-end
-local dragging = false
-local dragStart, startPos
+end 
+local UserInputService = game:GetService("UserInputService")
 
 local function anakDrag(frame)
+    local dragging = false
+    local dragInput, dragStart, startPos
+
     frame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
@@ -863,18 +865,23 @@ local function anakDrag(frame)
 
     frame.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            if dragging then
-                local delta = input.Position - dragStart
-                frame.Position = UDim2.new(
-                    startPos.X.Scale,
-                    startPos.X.Offset + delta.X,
-                    startPos.Y.Scale,
-                    startPos.Y.Offset + delta.Y
-                )
-            end
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
         end
     end)
 end
+
 local function makeDraggable(object, dragObject, enableTaptic, tapticOffset)
 	local dragging = false
 	local relative = nil
