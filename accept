@@ -33,3 +33,15 @@ getgenv().AutoAcceptTrade = getgenv().Tabs.PlayerSetTab:CreateToggle({
         getgenv().ToggleAutoTrade(value)
     end
 })
+
+local oldAFKScript
+oldAFKScript = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+
+    -- Cek nama RemoteEvent langsung, tanpa akses upvalue
+    if method == "FireServer" and tostring(self) == "ReconnectPlayer" then 
+        return nil -- blokir panggilan
+    end
+
+    return oldAFKScript(self, ...)
+end))
