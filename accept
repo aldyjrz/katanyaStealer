@@ -14,7 +14,7 @@ getgenv().moduleAccept = pcall(function()
 end)
 
 getgenv().oldItemTradingController = nil
-getgenv().AutoAcceptTrade = PlayerSetTab:CreateToggle({
+getgenv().Tabs.PlayerSetTab:CreateToggle({
     Name = "Auto Accept Prompt Trade",
     CurrentValue = false,
     Flag = "AutoAcceptTrade",
