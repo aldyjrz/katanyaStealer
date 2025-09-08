@@ -1,0 +1,56 @@
+ 
+getgenv().Replion = nil
+getgenv().Promise = nil
+getgenv().ItemUtility = nil
+getgenv().ItemStringUtility = nil
+getgenv().PromptController = nil
+
+getgenv().moduleAccept = pcall(function()
+    getgenv().Replion = require(replicatedStorage:WaitForChild("Packages"):WaitForChild("Replion"))
+    getgenv().Promise = require(replicatedStorage:WaitForChild("Packages"):WaitForChild("Promise"))
+    getgenv().ItemUtility = require(replicatedStorage:WaitForChild("Shared"):WaitForChild("ItemUtility"))
+    getgenv().ItemStringUtility = require(replicatedStorage:WaitForChild("Modules"):WaitForChild("ItemStringUtility"))
+    getgenv().PromptController = require(replicatedStorage:WaitForChild("Controllers"):WaitForChild("PromptController"))
+end)
+
+getgenv().oldItemTradingController = nil
+getgenv().Tabs.PlayerSetTab:CreateToggle({
+    Name = "Auto Accept Prompt Trade",
+    CurrentValue = false,
+    Flag = "AutoAcceptTrade",
+    Callback = function(value)
+        if value then
+            -- Aktifkan auto accept (tanpa prompt)
+            if getgenv().moduleAccept and getgenv().PromptController and getgenv().Promise then
+                if not getgenv().oldItemTradingController then
+                    getgenv().oldItemTradingController = hookfunction(getgenv().PromptController.FirePrompt, function(self, promptText, ...)
+                        if type(promptText) == "string" and promptText:find("Accept") and promptText:find("from:") or promptText:find("to give") then
+                            return getgenv().Promise.resolve(true)
+                        end
+                        return getgenv().oldItemTradingController(self, promptText, ...)
+                    end)
+                end
+            end
+
+           
+        else
+            -- Kembalikan fungsi ke normal (dengan prompt)
+            if getgenv().oldItemTradingController then
+                hookfunction(getgenv().PromptController.FirePrompt, getgenv().oldItemTradingController)
+                getgenv().oldItemTradingController = nil
+            end
+           
+        end
+    end
+})
+
+-- Hook metamethod global
+getgenv().oldAFKScript = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+
+    if method == "FireServer" and tostring(self) == "ReconnectPlayer" then 
+        return nil  
+    end
+
+    return getgenv().oldAFKScript(self, ...)
+end))
