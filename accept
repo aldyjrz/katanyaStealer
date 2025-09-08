@@ -1,6 +1,6 @@
 
 
-local controller = require(ReplicatedStorage.Controllers.ItemTradingController)
+local controller = require(ReplicatedStorage.WaitForChild("Controllers"):WaitForChild("ItemTradingController"))
 local fungsiOriginal = controller.CreateTradePrompt
 local Replion, Promise, ItemUtility, ItemStringUtility, PromptController
 local moduleAccept = pcall(function()
