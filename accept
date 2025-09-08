@@ -1,6 +1,4 @@
-getgenv().controller = require(replicatedStorage.WaitForChild("Controllers"):WaitForChild("ItemTradingController"))
-getgenv().fungsiOriginal = getgenv().controller.CreateTradePrompt
-
+ 
 getgenv().Replion = nil
 getgenv().Promise = nil
 getgenv().ItemUtility = nil
