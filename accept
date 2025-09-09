@@ -21,7 +21,7 @@ getgenv().Tabs.PlayerSetTab:CreateToggle({
     Callback = function(value)
         if value then
             -- Aktifkan auto accept (tanpa prompt)
-            if getgenv().moduleAccept and getgenv().PromptController and getgenv().Promise then
+            if   getgenv().PromptController and getgenv().Promise then
                 if not getgenv().oldItemTradingController then
                     getgenv().oldItemTradingController = hookfunction(getgenv().PromptController.FirePrompt, function(self, promptText, ...)
                        if type(promptText) == "string" and (
