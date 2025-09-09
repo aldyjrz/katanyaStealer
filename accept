@@ -1,7 +1,6 @@
  
 -- Simpan fungsi asli agar bisa dikembalikan
-local originalCreateTradePrompt = controller.CreateTradePrompt
-local Replion, Promise, ItemUtility, ItemStringUtility, PromptController
+ local Replion, Promise, ItemUtility, ItemStringUtility, PromptController
 local modulesLoaded = pcall(function()
     Replion = require(replicatedStorage:WaitForChild("Packages"):WaitForChild("Replion"))
     Promise = require(replicatedStorage:WaitForChild("Packages"):WaitForChild("Promise"))
@@ -11,7 +10,7 @@ local modulesLoaded = pcall(function()
 end)
  
 local AutoAcceptTrade
- AutoAcceptTrade  = PlayerSetTab:CreateToggle({
+ AutoAcceptTrade  = getgenv().Tabs.PlayerSetTab:CreateToggle({
     Name = "Auto Accept Prompt Trade",
     CurrentValue = false,
     Flag = "AutoAcceptTrade",
