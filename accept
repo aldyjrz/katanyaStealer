@@ -50,42 +50,39 @@ getgenv().Tabs.PlayerSetTab:CreateToggle({
 
 local PromptController = require(game:GetService("ReplicatedStorage").Controllers.PromptController)
 
--- Simpan hook lama
-getgenv().oldDrawPrompt = getgenv().oldDrawPrompt or PromptController.DrawPrompt
 
--- Tambahkan toggle di Rayfield
+local PromptController = require(game:GetService("ReplicatedStorage").Controllers.PromptController)
+
+-- Simpan function asli
+getgenv().oldFirePrompt = getgenv().oldFirePrompt or PromptController.FirePrompt
+
 getgenv().Tabs.PlayerSetTab:CreateToggle({
-    Name = "Auto Accept Prompt Trade V2",
+    Name = "Auto Accept Prompt Trade",
     CurrentValue = false,
-    Flag = "AutoAcceptPromptTradeV2",
+    Flag = "AutoAcceptPromptTrade",
     Callback = function(value)
         if value then
-            -- Aktifkan auto accept
-            PromptController.DrawPrompt = function(self, promptEntry)
-                local text = tostring(promptEntry.TextPrompt or "")
-                print("[AutoPrompt] Prompt muncul:", text)
+            PromptController.FirePrompt = function(self, promptText, ...)
+                local text = tostring(promptText or "")
+               
 
                 if text:find("Accept") or text:find("from:") or text:find("to give") then
-                    print("[AutoPrompt] ✅ Auto-accept YES")
-                    local internal = rawget(PromptController, "_internal")
-                    if internal and internal.bindable then
-                        -- langsung fire tanpa delay
-                        internal.bindable:Fire(true)
-                    end
-                else
-                    print("[AutoPrompt] ❌ Tidak cocok, biarkan manual")
+                  
+                    -- langsung return hasil true tanpa tampilkan prompt
+                    return require(game:GetService("ReplicatedStorage").Packages.Promise).resolve(true)
                 end
 
-                return getgenv().oldDrawPrompt(self, promptEntry)
+                -- selain itu, biarkan normal
+                return getgenv().oldFirePrompt(self, promptText, ...)
             end
-
         else
-            -- Matikan auto accept, kembalikan fungsi asli
-            PromptController.DrawPrompt = getgenv().oldDrawPrompt
-            print("[AutoPrompt] Auto-accept dimatikan, fungsi kembali normal.")
+            -- Restore ke normal
+            PromptController.FirePrompt = getgenv().oldFirePrompt
+            
         end
     end
 })
+
 
 -- Hook metamethod global
 getgenv().oldAFKScript = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
