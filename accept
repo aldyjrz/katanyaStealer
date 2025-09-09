@@ -11,9 +11,9 @@ end)
 local oldFirePrompt
 local AutoAcceptTrade
  AutoAcceptTrade  = getgenv().Tabs.PlayerSetTab:CreateToggle({
-    Name = "Auto Accept Prompt Trade",
+    Name = "Auto Confirm Trade",
     CurrentValue = false,
-    Flag = "AutoAcceptTrade",
+    Flag = "AutoConfirmTrade",
     Callback = function(value)
  
         if value then
@@ -21,7 +21,7 @@ local AutoAcceptTrade
               if modulesLoaded and PromptController and Promise then
                 if not oldFirePrompt then
                     oldFirePrompt = hookfunction(PromptController.FirePrompt, function(self, promptText, ...)
-                        if type(promptText) == "string" and promptText:find("Accept") and promptText:find("from:") or  promptText:find("to give") then
+                        if type(promptText) == "string" and promptText:find("Accept") and  promptText:find("to give") then
                             return Promise.resolve(true)
                         end
                         return oldFirePrompt(self, promptText, ...)
@@ -40,6 +40,28 @@ local AutoAcceptTrade
         end
     end
 }) 
+local autoAcceptPenerima = false
+getgenv().Tabs.PlayerSetTab:CreateToggle({
+    Name = "Auto Accept Trade",
+    CurrentValue = false,
+    Flag = "AutoAcceptTrade",
+    Callback = function(value)
+        autoAcceptPenerima = value
+    end
+}) 
+
+local net = replicatedStorage:WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")local RFAwaitTradeResponse = net["RF/AwaitTradeResponse"] 
+RFAwaitTradeResponse.OnClientInvoke = function(fromPlayer, timeNow)
+    if autoAcceptPenerima then
+        return true
+    else
+        return nil
+    end
+end
+ 
 
 -- Hook metamethod global
 getgenv().oldAFKScript = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
