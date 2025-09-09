@@ -53,7 +53,8 @@ getgenv().Tabs.PlayerSetTab:CreateToggle({
 local net = replicatedStorage:WaitForChild("Packages")
     :WaitForChild("_Index")
     :WaitForChild("sleitnick_net@0.2.0")
-    :WaitForChild("net")local RFAwaitTradeResponse = net["RF/AwaitTradeResponse"] 
+    :WaitForChild("net")
+    local RFAwaitTradeResponse = net["RF/AwaitTradeResponse"] 
 RFAwaitTradeResponse.OnClientInvoke = function(fromPlayer, timeNow)
     if autoAcceptPenerima then
         return true
