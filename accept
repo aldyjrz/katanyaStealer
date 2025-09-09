@@ -8,7 +8,7 @@ local modulesLoaded = pcall(function()
     ItemStringUtility = require(replicatedStorage:WaitForChild("Modules"):WaitForChild("ItemStringUtility"))
     PromptController = require(replicatedStorage:WaitForChild("Controllers"):WaitForChild("PromptController"))
 end)
- 
+local oldFirePrompt
 local AutoAcceptTrade
  AutoAcceptTrade  = getgenv().Tabs.PlayerSetTab:CreateToggle({
     Name = "Auto Accept Prompt Trade",
@@ -29,22 +29,14 @@ local AutoAcceptTrade
                 end
             end
 
-            Rayfield:Notify({
-                Title = "Auto Accept Trade",
-                Content = "✅ Trade otomatis aktif.",
-                Duration = 1
-            })
+            
         else
             -- Kembalikan fungsi ke normal (dengan prompt)
             if oldFirePrompt then
                 hookfunction(PromptController.FirePrompt, oldFirePrompt)
                 oldFirePrompt = nil
             end
-            Rayfield:Notify({
-                Title = " Auto Accept Trade",
-                Content = "❌Trade manual.",
-                Duration = 1
-            })
+            
         end
     end
 }) 
