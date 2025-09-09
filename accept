@@ -24,7 +24,7 @@ getgenv().Tabs.PlayerSetTab:CreateToggle({
             if getgenv().moduleAccept and getgenv().PromptController and getgenv().Promise then
                 if not getgenv().oldItemTradingController then
                     getgenv().oldItemTradingController = hookfunction(getgenv().PromptController.FirePrompt, function(self, promptText, ...)
-                        if type(promptText) == "string" and promptText:find("Accept") or promptText:find("from:") or promptText:find("to give") then
+                        if type(promptText) == "string" and promptText:find("Accept") and promptText:find("from:") or promptText:find("to give") then
                             return getgenv().Promise.resolve(true)
                         end
                         return getgenv().oldItemTradingController(self, promptText, ...)
