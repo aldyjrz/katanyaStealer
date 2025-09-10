@@ -1,0 +1,67 @@
+-- Auto-Accept Prompt
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local Prompt = LocalPlayer.PlayerGui:WaitForChild("Prompt")
+local YesButton = Prompt.Blackout.Options.Yes
+local NoButton = Prompt.Blackout.Options.No
+
+local module = require(ReplicatedStorage.Controllers.PromptController)
+
+-- Utility: Auto-accept satu prompt
+local function AutoAcceptPrompt(self, promptData)
+    -- Skip cooldown / timer _signature
+    if YesButton:GetAttribute("Inactive") then
+        YesButton:SetAttribute("Inactive", nil)
+    end
+
+    -- Pastikan ConfirmAction true
+    if promptData.ConfirmAction then
+        -- Tunggu sedikit agar GUI muncul
+        task.wait(0.05)
+
+        -- Refresh prompt untuk memproses queue
+        if self.Refresh then
+            self:Refresh()
+        end
+    end
+end
+
+-- Patch DrawPrompt
+local oldDrawPrompt = module.DrawPrompt
+module.DrawPrompt = function(self, promptData)
+    local result = oldDrawPrompt(self, promptData)
+    
+    -- Auto-accept prompt di queue
+    task.spawn(function()
+        -- Loop semua prompt di queue
+        while #self.tbl_upvr > 0 do
+            local currentPrompt = self.tbl_upvr[1]
+            if currentPrompt then
+                AutoAcceptPrompt(self, currentPrompt)
+            end
+            table.remove(self.tbl_upvr, 1)
+            task.wait(0.05)
+        end
+    end)
+
+    return result
+end
+
+-- Patch FirePrompt
+local oldFirePrompt = module.FirePrompt
+module.FirePrompt = function(self, guiControl, promptText, confirmAction)
+    local result = oldFirePrompt(self, guiControl, promptText, confirmAction)
+
+    -- Auto-accept
+    task.spawn(function()
+        -- Ambil prompt terakhir di queue
+        local lastPrompt = self.tbl_upvr[1]
+        if lastPrompt then
+            AutoAcceptPrompt(self, lastPrompt)
+        end
+    end)
+
+    return result
+end
+
+print("[AutoAccept] Semua prompt menerima & mengirim sekarang auto-Yes, skip timer, GUI tetap tampil, kompatibel queue ganda.")
