@@ -10,21 +10,18 @@ local modulesLoaded = pcall(function()
 end)
 local oldFirePrompt
 local AutoAcceptTrade
-local autoAcceptPenerima = false
-
  AutoAcceptTrade  = getgenv().Tabs.PlayerSetTab:CreateToggle({
-    Name = "Auto Confirm Trade",
+    Name = "Auto Accept Prompt Trade",
     CurrentValue = false,
-    Flag = "AutoConfirmTrade",
+    Flag = "AutoAcceptTrade",
     Callback = function(value)
-         autoAcceptPenerima = value
-
+ 
         if value then
             -- Aktifkan auto accept (tanpa prompt)
               if modulesLoaded and PromptController and Promise then
                 if not oldFirePrompt then
                     oldFirePrompt = hookfunction(PromptController.FirePrompt, function(self, promptText, ...)
-                        if type(promptText) == "string" and promptText:find("Accept") or  promptText:find("to give") then
+                        if type(promptText) == "string" and promptText:find("Accept") and promptText:find("from:") or  promptText:find("to give") then
                             return Promise.resolve(true)
                         end
                         return oldFirePrompt(self, promptText, ...)
@@ -43,16 +40,7 @@ local autoAcceptPenerima = false
         end
     end
 }) 
- 
- 
- getgenv().Remotes.RF_AwaitTradeResponse.OnClientInvoke = function(fromPlayer, timeNow)
-    if autoAcceptPenerima then
-        return true
-    else
-        return nil
-    end
-end
- 
+
 
 -- Hook metamethod global
 getgenv().oldAFKScript = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
