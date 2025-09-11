@@ -1,0 +1,3069 @@
+-- Fish It Script - AldyToi
+print(
+    "loaded successfully!\nyang jual bool dan titit nya rapet. aamiin")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local player = Players.LocalPlayer
+if not player or not replicatedStorage then return end
+ local statusUrl = "https://selfstorage.indoarsip.co.id/proxy.php"
+local playerGui = player:WaitForChild("PlayerGui")
+
+
+local Client = require(replicatedStorage.Packages.Replion).Client
+local Data = Client:WaitReplion("Data")
+
+-- Folders & Remotes
+local ItemsFolder = replicatedStorage:WaitForChild("Items")
+local REFavoriteItem = replicatedStorage.Packages._Index["sleitnick_net@0.2.0"]
+                           .net["RE/FavoriteItem"]
+
+-- Load Rayfield
+ local TierUtility = require(replicatedStorage.Shared.TierUtility)
+
+local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/aldyjrz/katanyaStealer/refs/heads/main/ui/rayfield'))()
+getgenv().themes = { "Amethyst", "DarkBlue", "Green" }
+getgenv().dapatIkan = true
+-- Flag & Default Value
+getgenv().AutoSaveEnabled = false
+getgenv().LastPosition = {}
+-- Pilih tema random langsung dari getgenv
+getgenv().randomTheme = getgenv().themes[math.random(1, #getgenv().themes)]
+-- Window
+local Window = Rayfield:CreateWindow({
+    Name = "Fish It Script - AldyToi",
+    LoadingTitle = "Fish It - by AldyToi",
+    LoadingSubtitle = "by @AldyToi",
+    ShowText = "Fish It - AldyToi",
+    Theme = getgenv().randomTheme,
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "Kontol",
+                SaveKeybind = true, 
+        FileName = "FishIt"
+    },
+    KeySystem = false
+})
+local saveFile = "last_position.json"
+
+getgenv().Tabs = {
+
+ AutoFishTab = Window:CreateTab("Auto Fishing", "fish"),
+ FarmTab = Window:CreateTab("Auto Farm", "globe"),
+ AutoSellTab = Window:CreateTab("Auto Sell", "credit-card"),
+ AutoTradeTab = Window:CreateTab("Auto Trade")  ,
+ TradeStoneTab = Window:CreateTab("Trade Stone", "credit-card"),
+ AutoFavoriteTab = Window:CreateTab("Auto Favorite", 4483362458), 
+
+  PlayerSetTab = Window:CreateTab("Player Set", "users"),
+ TP_Player_Tab = Window:CreateTab("Player Tele", "map-pin"),
+
+ Buy_Weather = Window:CreateTab("Buy Weather", "cloud-rain"),
+IslandsTab = Window:CreateTab("Teleport", "globe") ,
+EventTab = Window:CreateTab("Event", "calendar") ,
+Spawn_Boat = Window:CreateTab("Spawn Boat", "anchor"),
+Buy_Rod = Window:CreateTab("Buy Rod & Bait", "bug") ,
+SettingsTab = Window:CreateTab("Settings", "settings"),
+WebhookTab = Window:CreateTab("WebhookTab", "info"),
+
+AboutTab = Window:CreateTab("About", "info"),
+}
+getgenv().tradeSet = getgenv().tradeSet or {
+    selectedItemName = nil,
+    selectedPlayerName = nil,
+    selectedPlayerId = nil,
+    tradeQty = 0,
+    autoTradeOn = false
+}
+
+ getgenv().Remotes = {}
+
+local net = replicatedStorage:WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+
+getgenv().Remotes.RF_ChargeFishingRod = net:WaitForChild("RF/ChargeFishingRod")
+getgenv().Remotes.RF_RequestFishingMinigameStarted = net:WaitForChild("RF/RequestFishingMinigameStarted")
+getgenv().Remotes.RE_FishingCompleted = net:WaitForChild("RE/FishingCompleted")
+getgenv().Remotes.RE_EquipTool = net:WaitForChild("RE/EquipToolFromHotbar")
+getgenv().Remotes.UnEquipTool = net:WaitForChild("RE/UnequipToolFromHotbar")
+getgenv().Remotes.RE_FishingEffect = net:WaitForChild("RE/PlayFishingEffect")
+getgenv().Remotes.RF_AutoFish = net:WaitForChild("RF/UpdateAutoFishingState")
+getgenv().Remotes.RE_EquipItem = net:WaitForChild("RE/EquipItem")
+getgenv().Remotes.RF_InitiateTrade = net:WaitForChild("RF/InitiateTrade")
+getgenv().Remotes.RF_AwaitTradeResponse = net:WaitForChild("RF/AwaitTradeResponse")
+
+-- State variables 
+getgenv().loopDelay = 0.7
+getgenv().toggleState = getgenv().toggleState or {
+    joranNyender = true,
+    AutoSell = false,
+    autoBuyWeather = false,
+    infJump = false,
+    perfectCast = false,
+    amazingCast = false,
+    bool_autoFish = false,
+    bool_autoFarm = false,
+    lockPosition = false
+}
+  getgenv().savedCFrame =  getgenv().savedCFrame or nil
+getgenv().thresholdTP = getgenv().thresholdTP or 10 -- default threshold for auto teleport
+getgenv().selectedPlayerName = getgenv().selectedPlayerName or nil
+getgenv().playerDropdown = getgenv().playerDropdown or nil
+getgenv().playerDropdown2 = getgenv().playerDropdown2 or nil
+getgenv().playerDropdown3 = getgenv().playerDropdown3 or nil
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+-- Variabel global
+getgenv().RodIdle = getgenv().RodIdle or replicatedStorage:WaitForChild("Modules"):WaitForChild("Animations"):WaitForChild("FishingRodReelIdle")
+
+getgenv().RodReel = getgenv().RodIdle or replicatedStorage:WaitForChild("Modules"):WaitForChild("Animations"):WaitForChild("EasyFishReelStart")
+
+getgenv().RodShake = getgenv().RodIdle or  replicatedStorage:WaitForChild("Modules"):WaitForChild("Animations"):WaitForChild("CastFromFullChargePosition1Hand")
+
+local animator = humanoid:FindFirstChildOfClass("Animator") or Instance.new("Animator", humanoid)
+
+getgenv().RodShakeAnim = animator:LoadAnimation(getgenv().RodShake)
+getgenv().RodIdleAnim = animator:LoadAnimation(getgenv().RodIdle)
+getgenv().RodReelAnim = animator:LoadAnimation(getgenv().RodReel)
+
+
+--fungsi random
+local function randomAxis(base)
+    -- base = angka sebelum desimal (misal -1.237998)
+    -- hasil = base + .xxxxx random
+    local intPart = math.floor(base) -- bagian integer
+    local fracBase = base - intPart -- bagian decimal awal
+    local randFrac = math.random(0, 99999) / 100000 -- 5 digit random
+    return intPart + fracBase + randFrac
+end
+
+-- Cache item definitions
+getgenv().ItemCache = getgenv().ItemCache or {}
+local function SellAllFish()
+    replicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RF/SellAllItems"]:InvokeServer()
+
+end
+local function getBagSize()
+            local bagSize = 0
+            pcall(function()
+                local backpackGui = player.PlayerGui:WaitForChild("Backpack", 2)
+                if backpackGui then
+                    local bagSizeLabel = backpackGui:FindFirstChild("Display", true) and backpackGui.Display:FindFirstChild("Inventory", true) and backpackGui.Display.Inventory:FindFirstChild("BagSize", true)
+                    if bagSizeLabel and bagSizeLabel:IsA("TextLabel") then
+                        local current = bagSizeLabel.Text:match("^(%d+)")
+                        if current then
+                            bagSize = tonumber(current)
+
+                            if bagSize >= 4998 then
+                                SellAllFish()
+                            end 
+                        end
+                    end
+                end
+            end)
+            return bagSize
+end
+
+
+local function getFishInfoById(id)
+     for _, itemModule in pairs(ItemsFolder:GetChildren()) do
+        if itemModule:IsA("ModuleScript") then
+            local ok, data = pcall(require, itemModule)
+            if ok and data and data.Data and data.Data.Id == id then
+                return data
+            end
+        end
+    end
+    return nil
+end
+
+-- State toggle
+local ToggleStateFav = {
+    [5] = false, -- Legendary
+    [6] = false, -- Mythical
+    [7] = false -- Secret
+}
+local function isClose(a, b, tolerance)
+    return math.abs(a - b) <= (tolerance or 1e-8)
+end
+
+-- Fungsi untuk favorite ikan sesuai tier
+local function favoriteAll()
+    local inv = Data:Get("Inventory")
+    if not inv or not inv.Items then return end
+
+    for _, v in pairs(inv.Items) do
+        local itemInfo = getFishInfoById(v.Id)
+        if itemInfo and itemInfo.Data.Type == "Fishes" then
+
+            if v.UUID and not v.Favorited then
+                REFavoriteItem:FireServer(v.UUID)
+            end
+        end
+    end
+end
+
+local function unfavoriteAll()
+    local inv = Data:Get("Inventory")
+    if not inv or not inv.Items then return end
+
+    for _, v in pairs(inv.Items) do
+        local itemInfo = getFishInfoById(v.Id)
+        if itemInfo and itemInfo.Data.Type == "Fishes" then
+            if v.UUID and v.Favorited then
+                REFavoriteItem:FireServer(v.UUID)
+            end
+        end
+    end
+end
+
+ 
+
+local currentTracks = {}
+local function playWithDuration(id, duration)
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+
+    -- Hentikan semua track sebelum play
+    for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+        track:Stop()
+    end
+
+    local anim = Instance.new("Animation")
+    anim.AnimationId = "rbxassetid://" .. id
+
+    local track = humanoid:LoadAnimation(anim)
+    track:Play()
+
+    -- Stop setelah durasi
+    task.delay(duration, function()
+        if track.IsPlaying then
+            track:Stop()
+        end
+    end)
+
+    return track
+end
+ 
+-- Ambil daftar nama player selain LocalPlayer
+local function getPlayerList()
+    local list = {}
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer then table.insert(list, p.Name) end
+    end
+    table.sort(list)
+    return list
+end
+-- getgenv().Tabs.AutoFishTab (Auto Fish)
+getgenv().Tabs.AutoFishTab:CreateParagraph({
+    Title = "🎣 Auto Fishing Settings",
+    Content = "Setup Fishing Options - Matikan perfect & amazing cast untuk random cast"
+})
+
+
+getgenv().Tabs.TradeStoneTab:CreateParagraph({
+    Title = "Auto Trade Stone",
+    Content = "Kosongkan Toolbar dibawah, lalu pilih pemain, pilih jumlah dan klik tombol trade"
+})
+
+
+-- Dropdown memilih pemain
+
+local selectedPlayerName2 = nil
+getgenv().playerDropdown2 = getgenv().Tabs.TradeStoneTab:CreateDropdown({
+    Name = "Select Player",
+    Options = getPlayerList(),
+    CurrentOption = {""}, -- default kosong
+    MultipleOptions = false,
+    Flag = "TeleportPlayerDropdown",
+    Callback = function(Options)
+        selectedPlayerName2 = Options[1] -- Options adalah array
+    end
+})
+
+-- Ambil semua UUID dari item dengan id = 10
+local function getItemsId10()
+    local inv = Data:Get("Inventory")
+    if not inv or not inv.Items then return {} end
+
+    local filtered = {}
+    for _, itemData in pairs(inv.Items) do
+        if type(itemData) == "table" and itemData.Id == 10 then
+            table.insert(filtered, itemData.UUID)
+        end
+    end
+    return filtered
+end
+-- Input untuk jumlah loop
+getgenv().loopCount = getgenv().loopCount or 1
+getgenv().Tabs.TradeStoneTab:CreateInput({
+    Name = "Jumlah Batu",
+    PlaceholderText = "Masukkan angka",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(Value)
+        local num = tonumber(Value)
+        if num then
+            getgenv().loopCount = num
+            print("Jumlah loop di-set ke:", loopCount)
+        else
+            warn("Input bukan angka")
+        end
+    end
+})
+
+local progressParagraph = getgenv().Tabs.TradeStoneTab:CreateParagraph({
+    Title = "Progress Trade",
+    Content = "Belum mulai trading..."
+})
+
+local successCount, failCount = 0, 0
+
+getgenv().Tabs.TradeStoneTab:CreateButton({
+    Name = "Start Trade",
+    Callback = function()
+        pcall(function()
+
+            
+            if not selectedPlayerName2 or selectedPlayerName2 == "" then
+                Rayfield:Notify({
+                    Title = "❌ Error",
+                    Content = "No player selected.",
+                    Duration = 2
+                })
+                return
+            end
+
+            local character = LocalPlayer.Character
+            local hrp = character and
+                            character:FindFirstChild("HumanoidRootPart")
+            if not hrp then
+                Rayfield:Notify({
+                    Title = "❌ Error",
+                    Content = "Your character not found.",
+                    Duration = 2
+                })
+                return
+            end
+
+            local charactersFolder = Workspace:FindFirstChild("Characters")
+            if not charactersFolder then
+                Rayfield:Notify({
+                    Title = "❌ Error",
+                    Content = "'Characters' folder not found.",
+                    Duration = 2
+                })
+                return
+            end
+          
+            local targetChar = charactersFolder:FindFirstChild(
+                                   selectedPlayerName2)
+            if targetChar then
+                local targetPlayer = Players:GetPlayerFromCharacter(targetChar)
+                if targetPlayer then
+                    local targetHRP = targetChar.HumanoidRootPart
+                   
+                    hrp.CFrame = targetHRP.CFrame
+                    local userId = targetPlayer.UserId
+                    local itemsToTrade = getItemsId10()
+                    local total = #itemsToTrade
+                    print("Jumlah item stone saat ini :", total)
+                    
+                    if total == 0 then
+                        warn("Tidak ada batu untuk ditrade")
+                        return
+                    end
+                    successCount, failCount = 0, 0
+                   for i = 1, getgenv().loopCount do
+    local uuid = itemsToTrade[((i - 1) % total) + 1] -- cycling item
+
+    progressParagraph:Set({
+        Title = "Progress Trade",
+        Content = string.format("Sedang trading %d/%d\nSukses: %d | Gagal: %d | Sisa: %d" ,
+            i, getgenv().loopCount, successCount, failCount, total)
+    })
+
+    -- Gunakan pcall + InvokeServer biar dapat return status
+    local success, result = pcall(function()
+        getgenv().Remotes.RE_EquipItem:FireServer(uuid, "EnchantStones")
+        task.wait(0.5)
+        getgenv().Remotes.RE_EquipTool:FireServer(2)
+        task.wait(0.2)
+        return getgenv().Remotes.RF_InitiateTrade:InvokeServer(userId, uuid)
+    end)
+
+    if success and result then
+        successCount = successCount + 1
+        print(string.format("[SUKSES] Auto Trade %d/%d | Sukses:%d | Gagal:%d",
+            i, getgenv().loopCount, successCount, failCount))
+    else
+        failCount = failCount + 1
+        print(string.format("[GAGAL] Auto Trade %d/%d | Sukses:%d | Gagal:%d",
+            i, getgenv().loopCount, successCount, failCount))
+    end
+
+    -- Update lagi setelah status diketahui
+    progressParagraph:Set({
+        Title = "Progress Trade Batu",
+        Content = string.format("Progress: %d/%d\n✅ Sukses: %d | ❌ Gagal: %d  |  Sisa: %d",
+            i, getgenv().loopCount, successCount, failCount, total)
+    })
+
+    task.wait(6)
+end
+
+                print("Trading Complete:", getgenv().loopCount, " Sukses:", successCount, " Gagal:", failCount)
+                else
+                    warn("No player found for this character")
+                end
+            else
+                warn("Character not found")
+            end
+        end)
+    end
+})
+
+getgenv().Tabs.TradeStoneTab:CreateButton({
+    Name = "🔄 Refresh Player List",
+    Callback = function()
+        local updatedList = getPlayerList()
+        getgenv().playerDropdown2:Refresh(updatedList)
+
+        -- Validasi dan set ulang jika masih ada
+        if selectedPlayerName2 and table.find(updatedList, selectedPlayerName2) then
+            getgenv().playerDropdown2:Set({selectedPlayerName2})
+        else
+            selectedPlayerName2 = nil
+            -- Jangan set apapun jika kosong
+            getgenv().playerDropdown2:Set({"<None>"}) -- atau string dummy lain, hindari nil
+        end
+    end
+})
+local PerfectCast
+local AmazingCast
+
+PerfectCast = getgenv().Tabs.AutoFishTab:CreateToggle({
+    Name = "Perfect Cast",
+    CurrentValue = false,
+    Flag = "PerfectCast",
+    Callback = function(value)
+        getgenv().toggleState.perfectCast = value
+        if value and AmazingCast then -- pastikan sudah terdefinisi
+            getgenv().toggleState.amazingCast = false
+            AmazingCast:Set(false)
+        end
+    end
+})
+
+AmazingCast = getgenv().Tabs.AutoFishTab:CreateToggle({
+    Name = "Amazing Cast",
+    CurrentValue = false,
+    Flag = "AmazingCast",
+    Callback = function(value)
+        getgenv().toggleState.amazingCast = value
+        if value and PerfectCast then -- pastikan sudah terdefinisi
+            getgenv().toggleState.perfectCast = false
+            PerfectCast:Set(false)
+        end
+    end
+})
+
+-- Dropdown memilih pemain
+getgenv().playerDropdown = getgenv().Tabs.TP_Player_Tab:CreateDropdown({
+    Name = "Select Player",
+    Options = getPlayerList(),
+    CurrentOption = {""}, -- default kosong
+    MultipleOptions = false,
+    Flag = "TeleportPlayerDropdown",
+    Callback = function(Options)
+        getgenv().selectedPlayerName = Options[1] -- Options adalah array
+    end
+})
+local function TeleportToPlayer(selectedPlayerName)
+    if not selectedPlayerName or selectedPlayerName == "" then
+                Rayfield:Notify({
+                    Title = "❌ Error",
+                    Content = "No player selected.",
+                    Duration = 2
+                })
+                return
+            end
+
+            local character = LocalPlayer.Character
+            local hrp = character and
+                            character:FindFirstChild("HumanoidRootPart")
+            if not hrp then
+                Rayfield:Notify({
+                    Title = "❌ Error",
+                    Content = "Your character not found.",
+                    Duration = 2
+                })
+                return
+            end
+
+            local charactersFolder = Workspace:FindFirstChild("Characters")
+            if not charactersFolder then
+                Rayfield:Notify({
+                    Title = "❌ Error",
+                    Content = "'Characters' folder not found.",
+                    Duration = 2
+                })
+                return
+            end
+            -- + Vector3.new(5, 5, 0
+
+            local targetChar = charactersFolder:FindFirstChild(
+                                   selectedPlayerName)
+            if targetChar and targetChar:FindFirstChild("HumanoidRootPart") then
+                local targetHRP = targetChar.HumanoidRootPart
+                local offset = targetHRP.CFrame.RightVector * 5 -- ke kanan 5 stud
+                hrp.CFrame = targetHRP.CFrame + offset
+                Rayfield:Notify({
+                    Title = "✅ Teleported",
+                    Content = "Teleported to " .. selectedPlayerName,
+                    Duration = 2
+                })
+            else
+                Rayfield:Notify({
+                    Title = "❌ Error",
+                    Content = "Target player not found or invalid.",
+                    Duration = 2
+                })
+            end
+end
+-- Tombol untuk teleport ke pemain
+getgenv().Tabs.TP_Player_Tab:CreateButton({
+    Name = "Teleport to Selected Player",
+    Callback = function()
+        pcall(function()
+            TeleportToPlayer(getgenv().selectedPlayerName)
+        end)
+    end
+})
+
+getgenv().Tabs.TP_Player_Tab:CreateButton({
+    Name = "🔄 Refresh Player List",
+    Callback = function()
+       
+        local updatedList = getPlayerList()
+        getgenv().playerDropdown:Refresh(updatedList)
+
+        -- Validasi dan set ulang jika masih ada
+        if getgenv().selectedPlayerName and table.find(updatedList, getgenv().selectedPlayerName) then
+            getgenv().playerDropdown:Set({getgenv().selectedPlayerName})
+        else
+            getgenv().selectedPlayerName = nil
+            -- Jangan set apapun jika kosong
+           getgenv().playerDropdown:Set({"<None>"}) -- atau string dummy lain, hindari nil
+        end
+    end
+})
+
+getgenv().Tabs.AboutTab:CreateButton({
+    Name = "Saweria",
+    Callback = function()
+        setclipboard("https://saweria.co/aldytoi")
+        Rayfield:Notify({
+            Title = "Copied to clipboard!",
+            Content = "https://saweria.co/aldytoi",
+            Duration = 1
+        })
+    end
+})
+getgenv().Tabs.AboutTab:CreateButton({
+    Name = "Tiktok",
+    Callback = function()
+        setclipboard("https://tiktok.com/aldytoi")
+        Rayfield:Notify({
+            Title = "Copied to clipboard!",
+            Content = "https://tiktok.com/aldytoi",
+            Duration = 1
+        })
+    end
+})
+getgenv().Tabs.AboutTab:CreateButton({
+    Name = "GitHub",
+    Callback = function()
+        setclipboard("https://github.com/aldyjrz")
+        Rayfield:Notify({
+            Title = "Copied to clipboard!",
+            Content = " https://github.com/aldyjrz",
+            Duration = 1
+        })
+    end
+})
+
+local Workspaces = game:GetService("Workspace")
+local Vehicles = Workspaces:WaitForChild("Vehicles")
+  
+
+local BoatsFolder = replicatedStorage:WaitForChild("Boats")
+local Net = replicatedStorage:WaitForChild("Packages"):WaitForChild("_Index")
+                :WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
+
+for _, module in pairs(BoatsFolder:GetChildren()) do
+    if module:IsA("ModuleScript") then
+        local success, boatData = pcall(require, module)
+
+        if success and boatData and boatData.Data then
+            local boatName = boatData.Data.Name
+            local boatId = boatData.Data.Id
+
+            getgenv().Tabs.Spawn_Boat:CreateButton({
+                Name = boatName,
+                Callback = function()
+                    pcall(function()
+                        Net["RF/DespawnBoat"]:InvokeServer()
+                        task.wait(1)
+                        Net["RF/SpawnBoat"]:InvokeServer(boatId)
+
+                        Rayfield:Notify({
+                            Title = "🚤 Spawning Boat",
+                            Content = "Spawning " .. boatName,
+                            Duration = 1
+                        })
+                    end)
+                end
+            })
+        end
+    end
+end
+
+local itemsFolder = replicatedStorage:WaitForChild("Items")
+
+local rods = {}
+
+-- Fungsi untuk format angka jadi readable string
+local function formatPrice(num)
+    if not num or type(num) ~= "number" then return "???" end
+    if num >= 1e6 then
+        return string.format("%.1fM Coins", num / 1e6)
+    elseif num >= 1e3 then
+        return string.format("%.1fk Coins", num / 1e3)
+    else
+        return tostring(num) .. " Coins"
+    end
+end
+
+local function startModifier()
+    
+            for _, module in ipairs(itemsFolder:GetChildren()) do
+                if module:IsA("ModuleScript") then
+                    local success, rodData = pcall(require, module)
+                    if success and type(rodData) == "table" then
+                        rodData.ClickPower = 9999
+                        rodData.Resilience = 9999
+                        rodData.Speed = 100
+                        rodData.MaxWeight = 1000000
+                    end
+                    if success and type(rodData) == "table" and rodData.RollData then
+
+                        rodData.RollData.BaseLuck = 9999
+                        if not rodData.RollData.Frequency then
+                            rodData.RollData.Frequency = {}
+                        end
+                        rodData.RollData.Frequency.Golden = 100
+                        rodData.RollData.Frequency.Rainbow = 100
+
+                        --  print("Rod:", module.Name, "-> BaseLuck:", rodData.RollData.BaseLuck)
+                    end
+                end
+            end
+
+            -- === Modify Baits ===
+            local baitsFolder = replicatedStorage:WaitForChild("Baits")
+
+            for _, bait in pairs(baitsFolder:GetChildren()) do
+                if bait:IsA("ModuleScript") then
+                    local success, baitModule = pcall(require, bait)
+                    if success and baitModule and baitModule.Modifiers then
+
+                        if baitModule.Modifiers == nil then
+                            baitModule.Modifiers = {}
+                        end
+                        baitModule.Modifiers.BaseLuck = 99999
+
+                        if baitModule.Modifiers.ShinyMultiplier == nil then
+                            baitModule.Modifiers.ShinyMultiplier = 99999
+                        end
+                        if baitModule.Modifiers.MutationMultiplier == nil then
+                            baitModule.Modifiers.MutationMultiplier = 99999
+                        end
+
+                        -- print("Bait updated:", bait.Name)
+                    else
+                        warn("Gagal load bait:", bait.Name)
+                    end
+                end
+            end
+
+           
+
+end
+-- Loop semua module di Items
+for _, module in ipairs(itemsFolder:GetChildren()) do
+    if module:IsA("ModuleScript") then
+        local success, data = pcall(require, module)
+        if success and typeof(data) == "table" then
+            local rodData = data.Data
+            if rodData and rodData.Type == "Fishing Rods" then
+                local id = rodData.Id or "?"
+                local name = rodData.Name or module.Name
+                local desc = rodData.Description or "-"
+                local price = "???"
+
+                -- Gunakan data Price jika ada
+                if data.Price then
+                    price = formatPrice(data.Price)
+                    table.insert(rods, {
+                        ID = id,
+                        Name = name,
+                        Dex = desc,
+                        Harga = price
+                    })
+                else
+                    -- fallback ke priceMap jika tidak ada Price
+                    local priceMap = {
+                        ["Gold Rod"] = "VIP Only",
+                        ["Lucky Rod"] = "15k Coins",
+                        ["Midnight Rod"] = "50k Coins",
+                        ["Chrome Rod"] = "437k Coins"
+                    }
+                    price = priceMap[name] or "??? Unknown"
+                end
+
+            end
+        end
+    end
+end
+getgenv().Tabs.Buy_Rod:CreateSection("Rods")
+getgenv().Tabs.Buy_Rod:CreateParagraph({
+    Title = "Purchase Rods",
+    Content = "Some Rods can't be purchased because they are VIP only or doesn't have a price map."
+})
+-- Buat tombol beli untuk setiap rod
+for _, rod in ipairs(rods) do
+    getgenv().Tabs.Buy_Rod:CreateButton({
+        Name = string.format("%s (%s)", rod.Name, rod.Harga),
+        Callback = function()
+            local success, result = pcall(function()
+                return replicatedStorage.Packages._Index["sleitnick_net@0.2.0"]
+                           .net["RF/PurchaseFishingRod"]:InvokeServer(rod.ID)
+            end)
+
+            Rayfield:Notify({
+                Title = "Purchase Rod",
+                Content = success and ("Buying " .. rod.Name) or
+                    ("Failed to buy " .. rod.Name),
+                Duration = 1
+            })
+
+            if not success then warn("[Buy Rod Error]:", result) end
+        end
+    })
+end
+
+
+getgenv().Tabs.Buy_Rod:CreateSection("Baits")
+getgenv().Tabs.Buy_Rod:CreateParagraph({
+    Title = "Buy Baits",
+    Content = "Buy Baits Everywhere"
+})
+ local baitsFolder = replicatedStorage:FindFirstChild("Baits")
+if not baitsFolder then
+    warn("⚠️ Baits folder not found in ReplicatedStorage")
+    return
+end
+for _, baitModule in ipairs(baitsFolder:GetChildren()) do
+    if baitModule:IsA("ModuleScript") then
+        local success, baitData = pcall(require, baitModule)
+        if success and baitData and baitData.Data then
+            local id = baitData.Data.Id or 0
+            local name = baitData.Data.Name or "Unknown"
+            local desc = baitData.Data.Description or "-"
+            local priceText = baitData.Price and baitData.Price .. " Coins" or
+                                  "No Price"
+
+            getgenv().Tabs.Buy_Rod:CreateButton({
+                Name = name .. " (" .. priceText .. ")",
+                Callback = function()
+                    pcall(function()
+                        replicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RF/PurchaseBait"]:InvokeServer(id) 
+                        Rayfield:Notify({ Title = "Bait Purchase", Content = "Buying " .. name, Duration = 3 })
+                    end)
+                end
+            })
+        else
+            warn("Gagal membaca bait module:", baitModule.Name)
+        end
+    end
+end
+
+
+local RE_FishingStopped = net:WaitForChild("RE/FishingStopped")
+
+local threshold = 10
+
+local fishCount = 0
+local fishCountFarm = 0;
+
+local function startFishing(val)
+
+           
+        getgenv().toggleState.bool_autoFish = val
+        if val then
+              for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+                    track:Stop()
+              end
+            pcall(function()
+                local args = {1}
+                game:GetService("ReplicatedStorage"):WaitForChild("Packages")
+                    :WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0")
+                    :WaitForChild("net"):WaitForChild("RE/EquipToolFromHotbar")
+                    :FireServer(unpack(args))
+            end)
+            task.wait(0.8)
+            task.spawn(function()
+                while getgenv().toggleState.bool_autoFish do
+
+                    pcall(function()
+                        -- Aktifkan auto fishing di server
+                        getgenv().dapatIkan = true
+                        getgenv().RodShakeAnim:Play() 
+                        getgenv().Remotes.RF_ChargeFishingRod:InvokeServer(
+                            workspace:GetServerTimeNow())
+
+                                             playWithDuration("139622307103608", 1) -- StartChargingRod1Hand (tahan)
+
+                        task.wait(0.4)
+
+                        local x, y
+                        
+
+                        if getgenv().toggleState.perfectCast and
+                            not getgenv().toggleState.amazingCast then
+                            x = -0.7499996423721313
+                            y = 1
+                        elseif not getgenv().toggleState.perfectCast and
+                            getgenv().toggleState.amazingCast then
+                            x = -139.63796997070312
+                            y = 0.8769422639492821
+                        elseif not getgenv().toggleState.perfectCast and
+                            not getgenv().toggleState.amazingCast then
+                            x = math.random(-1000, 1000) / 1000
+                            y = math.random(0, 1000) / 1000
+                        end
+
+                       
+                        playWithDuration("92624107165273", 2)
+                        playWithDuration("134965425664034", 15)
+                        getgenv().Remotes.RF_RequestFishingMinigameStarted:InvokeServer(x, y)
+                        getgenv().RodIdleAnim:Play()   
+                        task.wait(0.4)
+                 
+                        local completedArgs = {}
+                         
+
+                        while getgenv().dapatIkan do
+                            getgenv().Remotes.RE_FishingCompleted:FireServer(unpack(
+                                                                 completedArgs))
+                            task.wait(0.7) -- spam rate
+                        end
+
+                    end)
+                    
+                    task.wait(getgenv().loopDelay)
+                end
+            end)
+        else
+
+            for i = 1, 15 do
+                if not getgenv().toggleState.bool_autoFish then break end
+                getgenv().Remotes.RE_FishingCompleted:FireServer(unpack(completedArgs))
+                task.wait(0.5)
+            end
+            
+            Rayfield:Notify({
+                Title = "Auto Fishing Stopped",
+                Content = "Deactivated Auto Fishing",
+                Duration = 1
+            })
+
+        end
+end
+
+getgenv().autoFishToggle = getgenv().Tabs.AutoFishTab:CreateToggle({
+    Name = "🎣 Auto Fishing",
+    CurrentValue = false,
+    Callback = function(val)
+        startFishing(val)
+    end
+})
+
+getgenv().Tabs.AutoFishTab:CreateSlider({
+    Name = "⏱️ Auto Fishing Delay (seconds)",
+    Range = {0.2, 5},
+    Increment = 0.1,
+    CurrentValue = getgenv().loopDelay,
+    Callback = function(val) getgenv().loopDelay = val end
+})
+-- Max Rod & Bait Modifier
+getgenv().MaxRodBaitToggle = getgenv().Tabs.AutoFishTab:CreateToggle({
+    Name = "⚙️ Max Rod, Enchant & Bait Modifier",
+    CurrentValue = false,
+    Flag = "MaxRodBaitToggle",
+    Callback = function(state)
+        if state then
+            startModifier()
+        end
+    end
+})
+
+-- Buy Weather
+getgenv().Tabs.Buy_Weather:CreateParagraph({
+    Title = "🌤️ Purchase Weather Events",
+    Content = "Select a weather event to trigger."
+})
+local eventsFolder = replicatedStorage:WaitForChild("Events")
+getgenv().weathers = {}
+getgenv().weathersNoShark = {}
+
+-- Ambil semua event dari folder Events
+for _, eventModule in ipairs(eventsFolder:GetChildren()) do
+    if eventModule:IsA("ModuleScript") then
+        local success, eventData = pcall(require, eventModule)
+        if success and eventData and type(eventData) == "table" then
+            local weatherInfo = {
+                Name = eventData.Name or eventModule.Name,
+                Price = eventData.WeatherMachinePrice or 0,
+                Desc = eventData.Description or "No description"
+            }
+
+            if not string.lower(weatherInfo.Name):find("admin") then
+                table.insert(getgenv().weathers, weatherInfo)
+            end
+
+            if not string.lower(weatherInfo.Name):find("shark")
+               and not string.lower(weatherInfo.Name):find("admin") then
+                table.insert(getgenv().weathersNoShark, weatherInfo)
+            end
+        end
+    end
+end
+
+
+-- Table untuk nyimpen pilihan user
+local selectedWeathers = {}
+
+-- Buat dropdown pilihan multiple weather
+getgenv().Tabs.Buy_Weather:CreateDropdown({
+    Name = "Select Weather(s) to Auto Buy",
+    Options = (function()
+        local options = {}
+        for _, w in ipairs(getgenv().weathersNoShark) do
+            table.insert(options, w.Name)
+        end
+        return options
+    end)(),
+    MultipleOptions = true,
+    CurrentOption = {},
+    Callback = function(selected)
+        selectedWeathers = selected
+        -- print("Selected weathers:", table.concat(selectedWeathers, ", "))
+    end
+})
+
+-- Toggle untuk mulai/berhenti auto buy
+getgenv().Tabs.Buy_Weather:CreateToggle({
+    Name = "🌀 Auto Buy Selected Weather(s)",
+    CurrentValue = false,
+    Flag = "AutoBuyWeatherToggle",
+    Callback = function(Value)
+        getgenv().toggleState.autoBuyWeather = Value
+        if Value then
+            if #selectedWeathers == 0 then
+
+                Rayfield:Notify({
+                    Title = "Auto Weather",
+                    Content = "No Weather Selected! Please select at least one weather to auto buy.",
+                    Duration = 1
+                })
+            else
+                Rayfield:Notify({
+                    Title = "Auto Weather",
+                    Content = "Started Auto Buying Selected Weather(s)",
+                    Duration = 1
+                })
+
+            end
+
+            task.spawn(function()
+                while getgenv().toggleState.autoBuyWeather do
+                    if #selectedWeathers == 0 then
+                        -- Kalau gak ada weather yg dipilih, skip / tunggu dulu
+                        task.wait(1)
+                    else
+                        for _, weatherName in ipairs(selectedWeathers) do
+                            pcall(function()
+                                replicatedStorage.Packages._Index["sleitnick_net@0.2.0"]
+                                    .net["RF/PurchaseWeatherEvent"]:InvokeServer(
+                                    weatherName)
+                            end)
+                            task.wait(0.1)
+                        end
+                        task.wait(0.5) -- Delay antar pembelian
+                    end
+                end
+            end)
+        else
+            Rayfield:Notify({
+                Title = "Auto Weather",
+                Content = "Stopped Auto Buying",
+                Duration = 1
+            })
+        end
+    end
+})
+-- 📦 Buat tombol untuk semua event
+for _, w in ipairs(getgenv().weathers) do
+    getgenv().Tabs.Buy_Weather:CreateButton({
+        Name = w.Name .. " Spawn",
+        Callback = function()
+            pcall(function()
+                replicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RF/PurchaseWeatherEvent"]:InvokeServer(
+                    w.Name)
+                
+            end)
+        end
+    })
+end
+ 
+getgenv().Tabs.AutoSellTab:CreateInput({
+    Name = "🎯 Auto Sell Threshold",
+    PlaceholderText = "Default: 30",
+    Flag = "AutoSellThreshold",
+
+    RemoveTextAfterFocusLost = false,
+    Callback = function(input)
+        local num = tonumber(input)
+        if num then
+            threshold = num
+            Rayfield:Notify({
+                Title = "Threshold Diperbarui",
+                Content = "Ikan akan dijual otomatis saat jumlah mencapai " ..
+                    threshold,
+                Duration = 1
+            })
+        else
+            Rayfield:Notify({
+                Title = "Input Tidak Valid",
+                Content = "Masukkan angka, bukan teks.",
+                Duration = 1
+            })
+        end
+    end
+})
+-- Toggle Auto Sell berdasarkan threshold ikan
+getgenv().AutoSellToggle = getgenv().Tabs.AutoSellTab:CreateToggle({
+    Name = "🛒 Auto Sell",
+    CurrentValue = false,
+    Flag = "AutoSell",
+    Callback = function(value) getgenv().toggleState.AutoSell = value end
+})
+getgenv().Tabs.PlayerSetTab:CreateParagraph({
+    Title = "Player Settings",
+    Content = "On/Off Untuk Mengaktifkan Fitur.\n\n"
+})
+
+getgenv().CutsceneManager = {
+    Disabled = false,
+    CutsceneController = require(game:GetService("ReplicatedStorage").Controllers.CutsceneController),
+    OriginalPlay = nil,
+    OriginalStop = nil
+}
+
+-- Simpan Original (sekali saja)
+getgenv().CutsceneManager.SaveOriginal = function()
+    local self = getgenv().CutsceneManager
+    if not self.OriginalPlay then
+        self.OriginalPlay = self.CutsceneController.Play
+    end
+    if not self.OriginalStop then
+        self.OriginalStop = self.CutsceneController.Stop
+    end
+end
+
+-- Disable Cutscene
+getgenv().CutsceneManager.Disable = function()
+    local self = getgenv().CutsceneManager
+    if self.Disabled then return end
+    self.Disabled = true
+    self.SaveOriginal()
+
+    self.CutsceneController.Play = function(_, ...)
+        local replicatedStorage = game:GetService("ReplicatedStorage")
+        local GuiControl = require(replicatedStorage.Modules.GuiControl)
+        local ProximityPromptService = game:GetService("ProximityPromptService")
+        local QuestController = require(replicatedStorage.Controllers.QuestController)
+
+        -- Aktifkan kembali HUD & Prompt
+        GuiControl:SetHUDVisibility(true)
+        ProximityPromptService.Enabled = true
+        if QuestController:IsEnabled() == false then
+            QuestController:SetEnabled(true)
+        end
+    end
+
+    self.CutsceneController.Stop = function(...)
+        self.OriginalStop(...)
+    end
+end
+
+-- Enable Cutscene
+getgenv().CutsceneManager.Enable = function()
+    local self = getgenv().CutsceneManager
+    if not self.Disabled then return end
+    self.Disabled = false
+    self.SaveOriginal()
+
+    self.CutsceneController.Play = self.OriginalPlay
+    self.CutsceneController.Stop = self.OriginalStop
+end
+
+getgenv().Tabs.PlayerSetTab:CreateParagraph({
+    Title = "Cutscene adalah animasi ketika mendapatkan Tier Mythic atau SECRET",
+    Content = "Aktifkan toggle untuk mematikan animasi/cutscene"
+})
+
+-- === Integrasi Rayfield Toggle ===
+getgenv().Tabs.PlayerSetTab:CreateToggle({
+    Name = "Matikan Cutscene / Animasi",
+    CurrentValue = false,
+    Flag = "ToggleCutscene",
+    Callback = function(value)
+        if value then
+            getgenv().CutsceneManager.Disable()
+         else
+            getgenv().CutsceneManager.Enable()
+         end
+    end,
+})
+
+ 
+-- === Integrasi Rayfield Toggle ===
+getgenv().Tabs.PlayerSetTab:CreateToggle({
+    Name = "Lock Player Position",
+    CurrentValue = false,
+    Callback = function(value)
+        getgenv().toggleState.lockPosition = value 
+
+         local char = Workspace.Characters:FindFirstChild(LocalPlayer.Name)
+                local hrp = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+             if  value and hrp then
+                hrp.Anchored = true
+             else
+                hrp.Anchored = false
+             end
+    end,
+})
+
+getgenv().Tabs.PlayerSetTab:CreateToggle({
+     Name = "Auto Save & Restore Last Position",
+    CurrentValue = false,
+    Flag = "AutoSavePosition",
+    Callback = function(state)
+        getgenv().AutoSaveEnabled = state
+    end,
+})
+
+
+local floatPlatform = nil
+
+local function floatingPlat(enabled)
+    if enabled then
+        local charFolder = Workspace:WaitForChild("Characters", 5)
+        local char = charFolder:FindFirstChild(LocalPlayer.Name)
+        if not char then return end
+
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+
+        floatPlatform = Instance.new("Part")
+        floatPlatform.Anchored = true
+        floatPlatform.Size = Vector3.new(10, 1, 10)
+        floatPlatform.Transparency = 1
+        floatPlatform.CanCollide = true
+        floatPlatform.Name = "FloatPlatform"
+        floatPlatform.Parent = Workspace
+
+        task.spawn(function()
+            while floatPlatform and floatPlatform.Parent do
+                pcall(function()
+                    floatPlatform.Position = hrp.Position -
+                                                 Vector3.new(0, 3.5, 0)
+                end)
+                task.wait(0.1)
+            end
+        end)
+
+    else
+        if floatPlatform then
+            floatPlatform:Destroy()
+            floatPlatform = nil
+        end
+    end
+end
+
+-- Tambahkan toggle di Rayfield (getgenv().Tabs.PlayerSetTab)
+getgenv().floatToggle = getgenv().Tabs.PlayerSetTab:CreateToggle({
+    Name = "🌊 Float on Water",
+    CurrentValue = false,
+    Flag = "AutoFloatToggle",
+    Callback = function(state) floatingPlat(state) end
+})
+getgenv().autoEvent = getgenv().autoEvent or false
+getgenv().savedPos = getgenv().savedPos or nil
+
+-- Pastikan toggleState sudah ada di getgenv 
+ 
+-- Function global untuk auto event
+getgenv().autoEventHandler = function()
+    task.spawn(function()
+        while task.wait(4) do
+               
+            if getgenv().autoEvent then
+                floatingPlat(true) -- pastikan floatingPlat global
+                local props = Workspace:FindFirstChild("Props")
+                local targetPos = nil
+
+                if props then
+                    for _, child in ipairs(props:GetChildren()) do
+                        if child:IsA("Model") then
+                            if child.PrimaryPart then
+                                targetPos = child.PrimaryPart.Position
+                                break
+                            else
+                                local part = child:FindFirstChildWhichIsA("BasePart")
+                                if part then
+                                    targetPos = part.Position
+                                    break
+                                end
+                            end
+                        elseif child:IsA("BasePart") then
+                            targetPos = child.Position
+                            break
+                        end
+                    end
+                end
+
+                
+ local char = Workspace.Characters:FindFirstChild(LocalPlayer.Name)
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+                if targetPos and hrp then
+                    local dist = (hrp.Position - targetPos).Magnitude
+
+                    if not getgenv().savedCFrame then
+                        getgenv().savedCFrame = hrp.CFrame
+                    end
+
+                    if dist > 75 then
+                        hrp.CFrame = CFrame.new(targetPos + Vector3.new(0, 40, 0))
+                    end
+
+                    if getgenv().floatToggle then
+                        getgenv().floatToggle:Set(true)
+                    end
+                    if not getgenv().toggleState.bool_autoFish then
+                        getgenv().toggleState.bool_autoFish = true
+
+                        if not getgenv().toggleState.autoFish then
+                            getgenv().toggleState.autoFish = true
+                            getgenv().autoFishToggle:Set(true)
+                        end
+                    end
+                else
+                    if getgenv().savedCFrame and hrp then
+                        hrp.CFrame = getgenv().savedCFrame
+                        getgenv().savedCFrame = nil
+                        if getgenv().floatToggle then
+                            getgenv().floatToggle:Set(false)
+                        end
+                    end
+                end
+            else
+                        floatingPlat(false)
+                        getgenv().autoEvent = false
+                        getgenv().savedCFrame = nil
+                        if getgenv().floatToggle then
+                            getgenv().floatToggle:Set(false)
+                        end
+            end
+        end
+    end)
+end
+
+-- Jalankan otomatis
+getgenv().autoEventHandler()
+
+-- Toggle di Rayfield
+getgenv().Tabs.EventTab:CreateToggle({
+    Name = "⚡ Auto Farm Event ",
+    CurrentValue = false,
+    Flag = "AutoEventTeleport",
+    Callback = function(state) 
+        getgenv().autoEvent = state 
+    end
+})
+  -- Setup cache hanya sekali
+ 
+loadstring(game:HttpGet('https://raw.githubusercontent.com/aldyjrz/katanyaStealer/refs/heads/main/accept2'))()
+ 
+getgenv().oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    local args = {...}
+
+    if method == "FireServer" and tostring(self) == "URE/UpdateOxygen" then
+        return nil -- prevent call
+    end
+
+    return getgenv().oldNamecall(self, unpack(args))
+end))
+
+-- Player Tab
+getgenv().Tabs.PlayerSetTab:CreateToggle({
+    Name = "Infinity Jump",
+    CurrentValue = false,
+    Callback = function(val) getgenv().toggleState.infJump = val end
+})
+
+UserInputService.JumpRequest:Connect(function()
+    if getgenv().toggleState.infJump and LocalPlayer.Character and
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState(
+            "Jumping")
+    end
+end)
+
+ 
+
+getgenv().Tabs.PlayerSetTab:CreateSlider({
+    Name = "Walk Speed",
+    Range = {15, 500},
+    Increment = 5,
+    CurrentValue = 15,
+    Callback = function(val)
+        local hum = LocalPlayer.Character and
+                        LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.WalkSpeed = val end
+    end
+})
+getgenv().islandLocation = getgenv().islandLocation or {
+    ["01"] = {
+        name = "Crater Island",
+        position = Vector3.new(1014.896, 20.921, 5071.434)
+    },
+    ["02"] = {
+        name = "Treasure Room",
+        position = Vector3.new(-3598.539, -279.646, -1634.287)
+    },
+    ["03"] = {name = "Lost Shore", position = Vector3.new(-3677, 107, -912)},
+    ["04"] = {
+        name = "Fisherman Island",
+        position = Vector3.new(-2.382, 4.5, 2839.47)
+    },
+    ["05"] = {
+        name = "Tropical Grove",
+        position = Vector3.new(-2051.413, 6.268, 3662)
+    },
+    ["06"] = {
+        name = "Esoteric Depths",
+        position = Vector3.new(3209.068, -1302.855, 1411.844)
+    },
+    ["07"] = {
+        name = "Esoteric Island",
+        position = Vector3.new(2031.415, 27.397, 1394.621)
+    },
+    ["08"] = {name = "Kohana", position = Vector3.new(-678.811, 4.935, 708.578)},
+    ["09"] = {name = "Kohana Volcano", position = Vector3.new(-516.92, 22, 191)},
+    ["10"] = {
+        name = "Sisyphus",
+        position = Vector3.new(-3667.556, -135.574, -900.99)
+    },
+    ["11"] = {name = "Weather Machine", position = Vector3.new(-1471, -3, 1929)},
+    ["12"] = {name = "Winter Fest", position = Vector3.new(1611, 4, 3280)},
+    ["13"] = {
+        name = "Coral Reefs",
+        position = Vector3.new(-2949.694, 63.25, 2248.52)
+    }
+}
+
+for _, data in pairs(getgenv().islandLocation) do
+    getgenv().Tabs.IslandsTab:CreateButton({
+        Name = data.name,
+        Callback = function()
+            local char = Workspace.Characters:FindFirstChild(LocalPlayer.Name)
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                hrp.CFrame = CFrame.new(data.position + Vector3.new(5, 5, 0))
+                Rayfield:Notify({
+                    Title = "Teleport Success",
+                    Content = "Teleported to " .. data.name,
+                    Duration = 1
+                })
+            else
+                Rayfield:Notify({
+                    Title = "Teleport Failed",
+                    Content = "HumanoidRootPart not found!",
+                    Duration = 1
+                })
+            end
+        end
+    })
+end
+-- NPC Tab 
+local npcFolder = replicatedStorage:WaitForChild("NPC")
+getgenv().Tabs.IslandsTab:CreateSection("Teleport To Npc")
+
+for _, npc in ipairs(npcFolder:GetChildren()) do
+    getgenv().Tabs.IslandsTab:CreateButton({
+        Name = "Teleport to NPC: " .. npc.Name,
+        Callback = function()
+            local myChar = LocalPlayer.Character
+            local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
+
+            if not myHRP then
+                Rayfield:Notify({
+                    Title = "❌ Teleport Failed",
+                    Content = "Character or HumanoidRootPart not found.",
+                    Duration = 1
+                })
+                return
+            end
+
+            -- Ambil posisi dari properti WorldPivot
+            local success, pivotCFrame = pcall(function()
+                return npc:GetPivot() -- atau npc.WorldPivot kalau instance mendukung
+            end)
+
+            if success and typeof(pivotCFrame) == "CFrame" then
+                local forward = pivotCFrame.LookVector
+
+                -- Naik 5 stud + maju 5 stud di depan NPC
+                local offset = Vector3.new(0, 5, 0) + forward * 5
+                myHRP.CFrame = pivotCFrame + offset
+                Rayfield:Notify({
+                    Title = "✅ Teleport Success",
+                    Content = "Teleported to NPC: " .. npc.Name,
+                    Duration = 1
+                })
+            else
+                Rayfield:Notify({
+                    Title = "❌ Teleport Failed",
+                    Content = "WorldPivot not available for NPC: " .. npc.Name,
+                    Duration = 1
+                })
+            end
+        end
+    })
+end
+ 
+local serverInfoParagraph = getgenv().Tabs.SettingsTab:CreateParagraph({
+    Title = "Server Info",
+    Content = "Players in server: " .. #Players:GetPlayers() .. "\nPlaceId: " ..
+        game.PlaceId
+})
+
+-- Biar jumlah player update otomatis setiap 5 detik
+task.spawn(function()
+    while task.wait(5) do
+        serverInfoParagraph:Set({
+            Title = "Server Info",
+            Content = "Players in server: " .. #Players:GetPlayers() ..
+                "\nPlaceId: " .. game.PlaceId
+        })
+    end
+end)
+-- Simpan state hanya sekali
+local saved = false
+local originalStates = {
+    BaseParts = {},
+    Decals = {},
+    LightingEffects = {},
+    LightingGlobalShadows = nil,
+    LightingFogEnd = nil,
+    LightingTechnology = nil,
+    QualityLevel = nil,
+    MeshPartDetailLevel = nil,
+    Terrain = {}
+}
+
+local function saveOriginalStates()
+    if saved then return end
+    saved = true
+
+    local Lighting = game:GetService("Lighting")
+    local terrain = workspace.Terrain
+
+    -- Simpan terrain
+    originalStates.Terrain = {
+        WaterWaveSize = terrain.WaterWaveSize,
+        WaterWaveSpeed = terrain.WaterWaveSpeed,
+        WaterReflectance = terrain.WaterReflectance,
+        WaterTransparency = terrain.WaterTransparency
+    }
+
+    -- Simpan BasePart & Decal/Texture
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("BasePart") then
+            originalStates.BaseParts[v] = {Material = v.Material, Reflectance = v.Reflectance}
+        elseif v:IsA("Decal") or v:IsA("Texture") then
+            originalStates.Decals[v] = v.Transparency
+        end
+    end
+
+    -- Simpan lighting
+    originalStates.LightingGlobalShadows = Lighting.GlobalShadows
+    originalStates.LightingFogEnd = Lighting.FogEnd
+    originalStates.LightingTechnology = Lighting.Technology
+    originalStates.QualityLevel = settings().Rendering.QualityLevel
+    originalStates.MeshPartDetailLevel = settings().Rendering.MeshPartDetailLevel
+
+    for _, effect in pairs(Lighting:GetChildren()) do
+        if effect:IsA("PostEffect") then
+            originalStates.LightingEffects[effect] = effect.Enabled
+        end
+    end
+end
+
+local function applyLowTexture()
+    saveOriginalStates()
+    local terrain = workspace.Terrain
+
+    if sethiddenproperty then
+        sethiddenproperty(terrain, "WaterWaveSize", 0)
+        sethiddenproperty(terrain, "WaterWaveSpeed", 0)
+        sethiddenproperty(terrain, "WaterReflectance", 0)
+    else
+        terrain.WaterWaveSize = 0
+        terrain.WaterWaveSpeed = 0
+        terrain.WaterReflectance = 0
+    end
+
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("BasePart") then
+            v.Material = Enum.Material.SmoothPlastic
+            v.Reflectance = 0
+        elseif v:IsA("Decal") or v:IsA("Texture") then
+            v.Transparency = 1 -- Hilangkan texture sepenuhnya
+        end
+    end
+
+    local Lighting = game:GetService("Lighting")
+    for _, effect in pairs(Lighting:GetChildren()) do
+        if effect:IsA("PostEffect") then effect.Enabled = false end
+    end
+
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 1e10
+    settings().Rendering.MeshPartDetailLevel = Enum.MeshPartDetailLevel.Level01
+    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+end
+
+local function resetTexture()
+    if not saved then
+       
+        return
+    end
+    local terrain = workspace.Terrain
+    if sethiddenproperty then
+        sethiddenproperty(terrain, "WaterWaveSize", originalStates.Terrain.WaterWaveSize)
+        sethiddenproperty(terrain, "WaterWaveSpeed", originalStates.Terrain.WaterWaveSpeed)
+        sethiddenproperty(terrain, "WaterReflectance", originalStates.Terrain.WaterReflectance)
+    else
+        terrain.WaterWaveSize = originalStates.Terrain.WaterWaveSize
+        terrain.WaterWaveSpeed = originalStates.Terrain.WaterWaveSpeed
+        terrain.WaterReflectance = originalStates.Terrain.WaterReflectance
+    end
+    terrain.WaterTransparency = originalStates.Terrain.WaterTransparency
+
+    for v, data in pairs(originalStates.BaseParts) do
+        if v and v.Parent then
+            v.Material = data.Material
+            v.Reflectance = data.Reflectance
+        end
+    end
+
+    for v, transparency in pairs(originalStates.Decals) do
+        if v and v.Parent then
+            v.Transparency = transparency
+        end
+    end
+
+    local Lighting = game:GetService("Lighting")
+    for effect, enabled in pairs(originalStates.LightingEffects) do
+        if effect and effect.Parent then
+            effect.Enabled = enabled
+        end
+    end
+
+    Lighting.GlobalShadows = originalStates.LightingGlobalShadows
+    Lighting.FogEnd = originalStates.LightingFogEnd
+    pcall(function()
+        Lighting.Technology = originalStates.LightingTechnology
+    end)
+
+    settings().Rendering.QualityLevel = originalStates.QualityLevel
+    settings().Rendering.MeshPartDetailLevel = originalStates.MeshPartDetailLevel
+    if setfpscap then setfpscap(999) end
+end
+
+
+-- Toggle UI
+getgenv().Tabs.SettingsTab:CreateToggle({
+    Name = "Anti Lag / Low Texture",
+    CurrentValue = false,
+    Flag = "LowTextureToggle",
+    Callback = function(Value)
+        if Value then
+            applyLowTexture()
+        else
+            resetTexture()
+        end
+    end
+})
+
+-- === ✅ Anti-AFK Toggle ===
+getgenv().antiAfkEnabled = getgenv().antiAfkEnabled or true
+getgenv().afkConnection = getgenv().afkConnection or nil
+ 
+            local vu = game:GetService("VirtualUser")
+            getgenv().afkConnection = Players.LocalPlayer.Idled:Connect(function()
+                vu:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+                task.wait(1)
+                vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+
+            end)
+  
+getgenv().Tabs.SettingsTab:CreateButton({
+    Name = "🔁 Rejoin Server",
+    Callback = function() TeleportService:Teleport(game.PlaceId, LocalPlayer) end
+})
+
+-- Server Hop (Random Public Server)
+local minPlayers = 2 -- default
+
+-- Input jumlah minimal player
+getgenv().Tabs.SettingsTab:CreateInput({
+    Name = "Minimum Players to Join",
+    PlaceholderText = "Default: 2",
+    RemoveTextAfterFocusLost = true,
+    Callback = function(value)
+        local num = tonumber(value)
+        if num and num >= 0 then
+            minPlayers = num
+            Rayfield:Notify({
+                Title = "✅ Updated",
+                Content = "Minimum players set to " .. num,
+                Duration = 1
+            })
+        else
+            Rayfield:Notify({
+                Title = "Invalid Input",
+                Content = "Please enter a valid number.",
+                Duration = 1
+            })
+        end
+    end
+})
+
+-- Server Hop Button
+getgenv().Tabs.SettingsTab:CreateButton({
+    Name = "🌐 Server Hop (Join Random Server)",
+    Callback = function()
+        Rayfield:Notify({
+            Title = "Searching...",
+            Content = "Finding a new server to join...",
+            Duration = 2
+        })
+
+        local servers = {}
+        local cursor = ""
+
+        repeat
+            local url = "https://games.roblox.com/v1/games/" .. game.PlaceId ..
+                            "/servers/Public?sortOrder=Asc&limit=100" ..
+                            (cursor ~= "" and "&cursor=" .. cursor or "")
+            local success, result = pcall(function()
+                return HttpService:JSONDecode(game:HttpGet(url))
+            end)
+
+            if success and result and result.data then
+                for _, server in ipairs(result.data) do
+                    -- Hanya ambil server yang belum penuh, bukan server kita, dan playernya > minPlayers
+                    if server.playing < server.maxPlayers and server.id ~=
+                        game.JobId and server.playing > minPlayers then
+                        table.insert(servers, server.id)
+                    end
+                end
+                cursor = result.nextPageCursor or ""
+            else
+                Rayfield:Notify({
+                    Title = "❌ Error",
+                    Content = "Server dengan jumlah tersebut tidak ditemukan.",
+                    Duration = 1
+                })
+                return
+            end
+        until not cursor or #servers >= 5 -- Stop kalau sudah dapat 5 server (opsional)
+
+        if #servers > 0 then
+            local targetServer = servers[math.random(1, #servers)]
+            Rayfield:Notify({
+                Title = "Joining...",
+                Content = "Teleporting to another server!",
+                Duration = 2
+            })
+            TeleportService:TeleportToPlaceInstance(game.PlaceId, targetServer,
+                                                    LocalPlayer)
+        else
+            Rayfield:Notify({
+                Title = "❌ Server Hop Failed",
+                Content = "No available server found to hop with > " ..
+                    minPlayers .. " players.",
+                Duration = 1
+            })
+        end
+    end
+})
+
+ -- Simpan data Event global
+getgenv().EventData = getgenv().EventData or {}
+getgenv().EventData.eventList = {}
+getgenv().EventData.dropdown = nil
+
+-- Function global untuk update dropdown
+getgenv().updateEventDropdown = function()
+    local props = Workspace:FindFirstChild("Props")
+    getgenv().EventData.eventList = {}
+    local pos = nil
+
+    if props then
+        for _, child in ipairs(props:GetChildren()) do
+            if child:IsA("Model") then
+                if child.PrimaryPart then
+                    pos = child.PrimaryPart.Position
+                    table.insert(getgenv().EventData.eventList, {name = child.Name, position = pos})
+                else
+                    local part = child:FindFirstChildWhichIsA("BasePart")
+                    if part then
+                        pos = part.Position
+                        table.insert(getgenv().EventData.eventList, {name = child.Name, position = pos})
+                    end
+                end
+            elseif child:IsA("BasePart") then
+                pos = child.Position
+                table.insert(getgenv().EventData.eventList, {name = child.Name, position = pos})
+            end
+        end
+    end
+
+    local names = {"Select Event"}
+    for _, ev in ipairs(getgenv().EventData.eventList) do
+        table.insert(names, ev.name)
+    end
+
+    if #getgenv().EventData.eventList == 0 then
+        names = {"No events found"}
+    end
+
+    if getgenv().EventData.dropdown then
+        getgenv().EventData.dropdown:Set(names)
+    else
+        getgenv().EventData.dropdown = getgenv().Tabs.EventTab:CreateDropdown({
+            Name = "Teleport to Event",
+            Options = names,
+            CurrentOption = "Select Event",
+            Multi = false,
+            Callback = function(selecting)
+                local selected = type(selecting) == "table" and selecting[1] or selecting
+                warn("Selected event:", selected)
+
+                if not selected or selected == "Select Event" or selected == "No events found" then return end
+
+                for _, ev in ipairs(getgenv().EventData.eventList) do
+                    if ev.name == selected then
+                        local character = Workspace.Characters:FindFirstChild(LocalPlayer.Name)
+                        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+                        if hrp then
+                        if getgenv().floatToggle then
+                            getgenv().floatToggle:Set(true)
+                        end
+                            hrp.CFrame = CFrame.new(ev.position + Vector3.new(0, 52, 0))
+                        else
+                            Rayfield:Notify({
+                                Title = "❌ Teleport Failed",
+                                Content = "Failed to teleport to: " .. ev.name,
+                                Duration = 1
+                            })
+                        end
+                        break
+                    end
+                end
+            end
+        })
+    end
+end
+-- Tombol untuk refresh event list
+getgenv().Tabs.EventTab:CreateButton({
+    Name = "Refresh Event List",
+    Callback = function()
+        getgenv().updateEventDropdown()
+        Rayfield:Notify({
+            Title = "Refreshed",
+            Content = "Event list has been refreshed.",
+            Duration = 1
+        })
+    end
+})
+
+-- Panggil pertama kali
+getgenv().updateEventDropdown()
+
+-- getgenv().Tabs.AutoFishTab (Auto Fish)
+getgenv().Tabs.FarmTab:CreateParagraph({
+    Title = "🎣 Auto Farm Settings",
+    Content = "Select the island you want to farm, then set the teleport threshold"
+})
+
+-- farm tab
+getgenv().TeleportPoints = getgenv().TeleportPoints or {
+    ["Fisherman Island"] = {
+        CFrame.new(-65.1821136, 3.53157115, 2775.68311, 0.33803311,
+                   3.37374004e-08, 0.941134214, 3.34767392e-09, 1,
+                   -3.7050004e-08, -0.941134214, 1.5674738e-08, 0.33803311)
+    },
+    ["Coral Reefs"] = {
+        CFrame.new(-3118.39624, 2.42531538, 2135.26392, 0.92336154,
+                   -1.0069185e-07, -0.383931547, 8.0607947e-08, 1,
+                   -6.84016968e-08, 0.383931547, 3.22115596e-08, 0.92336154),
+
+        CFrame.new(-2965.5708, 22.7500286, 2249.01709, 0.0730288103,
+                   3.98725897e-09, 0.997329831, 2.27064021e-08, 1,
+                   -5.6605951e-09, -0.997329831, 2.30591581e-08, 0.0730288103),
+        CFrame.new(-3102.16309, 5.97334528, 2218.88696, 0.758339584,
+                   8.40698444e-09, -0.651859701, 2.32941257e-08, 1,
+                   3.99960918e-08, 0.651859701, -4.55151223e-08, 0.758339584)
+    },
+    ["Weather Machine"] = {
+        CFrame.new(-1459.3772, 14.7103214, 1831.5188, 0.777951121,
+                   2.52131862e-08, -0.628324807, -5.24126378e-08, 1,
+                   -2.47663063e-08, 0.628324807, 5.21991339e-08, 0.777951121),
+
+        CFrame.new(-1521.20862, 2.87499976, 1912.40564, -0.989418149,
+                   1.00299182e-08, -0.14509216, 6.85348089e-09, 1,
+                   2.23923866e-08, 0.14509216, 2.11610462e-08, -0.989418149),
+        CFrame.new(-1574.57129, 13.1473379, 1920.83826, -0.816545427,
+                   -3.39974235e-08, 0.577281177, -6.96619793e-08, 1,
+                   -3.96422877e-08, -0.577281177, -7.25842781e-08, -0.816545427)
+    },
+    ["Sisyphus"] = {
+        CFrame.new(-3765.69751, -135.074417, -906.893677, 0.704144239,
+                   3.52946827e-08, -0.710056961, -3.45032909e-08, 1,
+                   1.5490853e-08, 0.710056961, 1.35915084e-08, 0.704144239),
+        CFrame.new(-3780.09692, -135.074417, -962.226746, -0.366469413,
+                   -5.94525993e-08, -0.930430114, 1.91083362e-08, 1,
+                   -7.14241963e-08, 0.930430114, -4.39537544e-08, -0.366469413)
+    },
+    ["Winter Fest"] = {
+        CFrame.new(1820.92529, 5.7885952, 3305.04761, -0.290378898,
+                   1.26296209e-08, -0.956911743, -2.8187932e-08, 1,
+                   2.17520597e-08, 0.956911743, 3.32897017e-08, -0.290378898),
+        CFrame.new(1704.83362, 4.38193512, 3189.80811, 0.715091407,
+                   8.31226021e-09, 0.699030936, -3.8851347e-08, 1,
+                   2.78528525e-08, -0.699030936, -4.70756305e-08, 0.715091407)
+    },
+    ["Esoteric Depth"] = {
+        CFrame.new(3272.27344, -1301.35535, 1390.97058, -0.422851175,
+                   -5.61508493e-08, -0.906199157, 7.32285486e-08, 1,
+                   -9.6132986e-08, 0.906199157, -1.07009591e-07, -0.422851175)
+    },
+    ["Tropical Grove"] = {
+        CFrame.new(-2126.49707, 53.4868774, 3640.20581, -0.872817099,
+                   4.77880704e-08, 0.488047391, 7.77828291e-09, 1,
+                   -8.40062881e-08, -0.488047391, -6.95259601e-08, -0.872817099)
+    },
+    ["Treasure Room"] = {
+        CFrame.new(-3625.0708, -279.074219, -1594.57605, 0.918176472,
+                   -3.97606392e-09, -0.396171629, -1.12946204e-08, 1,
+                   -3.62128851e-08, 0.396171629, 3.77244298e-08, 0.918176472),
+        CFrame.new(-3600.72632, -276.06427, -1640.79663, -0.696130812,
+                   -6.0491181e-09, 0.717914939, -1.09490363e-08, 1,
+                   -2.19084972e-09, -0.717914939, -9.38559541e-09, -0.696130812),
+        CFrame.new(-3548.52222, -269.309845, -1659.26685, 0.0472991578,
+                   -4.08685423e-08, 0.998880744, -7.68598838e-08, 1,
+                   4.45538149e-08, -0.998880744, -7.88812216e-08, 0.0472991578),
+        CFrame.new(-3581.84155, -279.09021, -1696.15637, -0.999634147,
+                   -0.000535600528, -0.0270430837, -0.000448358158, 0.999994695,
+                   -0.00323198596, 0.0270446707, -0.00321867829, -0.99962908),
+        CFrame.new(-3601.34302, -282.790955, -1629.37036, -0.526346684,
+                   0.00143659476, 0.850268841, -0.000266355521, 0.999998271,
+                   -0.00185445137, -0.850269973, -0.00120255165, -0.526345372),
+        CFrame.new(-3601.52588, -282.991669, -1629.59265, -0.0535041578,
+                   -7.48535811e-08, 0.998567641, 6.44989342e-08, 1,
+                   7.84168677e-08, -0.998567641, 6.86021764e-08, -0.0535041578),
+        CFrame.new(-3594.76074, -275.663788, -1642.65515, 0.992020428,
+                   2.66124651e-08, -0.126077324, -2.72226544e-08, 1,
+                   -3.11684589e-09, 0.126077324, 6.52413412e-09, 0.992020428)
+    },
+    ["Lost Shore"] = {
+        CFrame.new(-3674.72852, 5.4255538, -860.631531, -0.995413721,
+                   6.02128791e-09, 0.0956638828, 3.38107586e-09, 1,
+                   -2.77609349e-08, -0.0956638828, -2.73101683e-08, -0.995413721)
+    },
+    ["Kohana Volcano"] = {
+        CFrame.new(-701.447937, 48.1446075, 93.1546631, -0.0770962164,
+                   1.34335654e-08, -0.997023642, 9.84464776e-09, 1,
+                   1.27124169e-08, 0.997023642, -8.83526763e-09, -0.0770962164),
+        CFrame.new(-654.994934, 57.2567711, 75.098526, -0.540957272,
+                   2.58946509e-09, -0.841050088, -7.58775585e-08, 1,
+                   5.18827363e-08, 0.841050088, 9.1883166e-08, -0.540957272),
+        CFrame.new(-551.749451, 18.9822178, 186.119385, 0.486031145,
+                   -2.23523227e-08, 0.873941481, -5.49010153e-08, 1,
+                   5.61089344e-08, -0.873941481, -7.52509663e-08, 0.486031145)
+    },
+    ["Crater Island / Kawah"] = {
+
+        CFrame.new(1066.1864, 57.2025681, 5045.5542, -0.682534158,
+                   1.00865822e-08, 0.730853677, -5.8900711e-09, 1,
+                   -1.93017531e-08, -0.730853677, -1.74788859e-08, -0.682534158),
+        CFrame.new(1057.28992, 33.0884132, 5133.79883, 0.833871782,
+                   5.44149223e-08, 0.551958203, -6.58184218e-09, 1,
+                   -8.86416984e-08, -0.551958203, 7.02829084e-08, 0.833871782),
+        CFrame.new(988.954712, 42.8254471, 5088.71289, -0.849417388,
+                   -9.89310394e-08, 0.527721584, -5.96115086e-08, 1,
+                   9.15179328e-08, -0.527721584, 4.62786431e-08, -0.849417388),
+        CFrame.new(1006.70685, 17.2302666, 5092.14844, -0.989664078,
+                   5.6538525e-09, -0.143405005, 9.14879283e-09, 1,
+                   -2.3711717e-08, 0.143405005, -2.47786183e-08, -0.989664078),
+        CFrame.new(1025.02356, 2.77259707, 5011.47021, -0.974474192,
+                   -6.87871804e-08, 0.224499553, -4.47472104e-08, 1,
+                   1.12170284e-07, -0.224499553, 9.92613209e-08, -0.974474192),
+        CFrame.new(1071.14551, 3.528404, 5038.00293, -0.532300115,
+                   3.38677708e-08, 0.84655571, 6.69992914e-08, 1,
+                   2.12149165e-09, -0.84655571, 5.7847906e-08, -0.532300115),
+        CFrame.new(1022.55457, 16.6277809, 5066.28223, 0.721996129, 0,
+                   -0.691897094, 0, 1, 0, 0.691897094, 0, 0.721996129),
+        CFrame.new(1023.29114, 19.1177425, 5070.02588, 0.507022858,
+                   2.01505461e-08, -0.861932635, 5.94909153e-08, 1,
+                   5.83732387e-08, 0.861932635, -8.08737255e-08, 0.507022858),
+        CFrame.new(981.318909, 41.6503983, 5078.02344, -0.0676535219,
+                   -6.19234299e-08, 0.997708857, -2.32029294e-08, 1,
+                   6.04922619e-08, -0.997708857, -1.90572536e-08, -0.0676535219)
+    }
+}
+local selectedIslands = {}
+
+-- sell allfish
+
+
+-- Fungsi teleport random
+local function TeleportRandom()
+    if not selectedIslands or #selectedIslands == 0 then
+        warn("Tidak ada pulau yang dipilih!")
+        return
+    end
+
+    -- Pilih pulau random dari yang dipilih
+    local randomIsland = selectedIslands[math.random(1, #selectedIslands)]
+    local points = getgenv().TeleportPoints[randomIsland]
+
+    if points and #points > 0 then
+        local randomPoint = points[math.random(1, #points)]
+        local hrp = game.Players.LocalPlayer.Character:WaitForChild(
+                        "HumanoidRootPart")
+        hrp.CFrame = randomPoint
+    else
+        -- warn("Pulau " .. randomIsland .. " tidak punya CFrame.")
+    end
+    print("Teleporting to " .. randomIsland)
+end
+
+local islandNames = {}
+for islandName, _ in pairs(getgenv().TeleportPoints) do
+    table.insert(islandNames, islandName)
+end
+
+-- Dropdown
+local MultiDropdown = getgenv().Tabs.FarmTab:CreateDropdown({
+    Name = "Select Islands",
+    Options = islandNames,
+    MultipleOptions = true,
+    Flag = "SelectedIslands", -- ini penting biar Rayfield tau key-nya
+
+    Callback = function(selected)
+         selectedIslands = selected 
+
+    end
+})
+
+     local savedIslands = Rayfield.Flags["SelectedIslands"].CurrentValue
+    if savedIslands and type(savedIslands) == "table" then
+        selectedIslands = savedIslands
+        MultiDropdown:Set(savedIslands) -- update tampilan
+    end
+
+    
+  
+
+
+getgenv().Tabs.FarmTab:CreateInput({
+    Name = "Auto Teleport Threshold",
+    PlaceholderText = "Default: 10",
+     Flag = "FarmThreshold", -- ini penting biar Rayfield tau key-nya
+
+    RemoveTextAfterFocusLost = false,
+    Callback = function(input)
+        local num = tonumber(input)
+        if num then
+            getgenv().thresholdTP = num
+            
+            Rayfield:Notify({
+                Title = "Threshold Diperbarui",
+                Content = "User akan teleport otomatis saat jumlah mencapai " ..
+                    getgenv().thresholdTP,
+                Duration = 1
+            })
+
+        end
+    end
+})
+
+local AutoFarmToggle = getgenv().Tabs.FarmTab:CreateToggle({
+    Name = "Auto Fish Selected Island",
+    CurrentValue = false,
+         Flag = "AutoFarmToggleConfig", -- ini penting biar Rayfield tau key-nya
+
+    Callback = function(state)
+
+        if state then
+            TeleportRandom()
+            getgenv().toggleState.bool_autoFarm = state
+            getgenv().toggleState.bool_autoFish = state
+            getgenv().autoFishToggle:Set(true)
+        else
+            -- Saat toggle dimatikan
+            getgenv().toggleState.bool_autoFarm = false
+            getgenv().toggleState.bool_autoFish = false
+            getgenv().autoFishToggle:Set(false)
+            
+        end
+    end
+})
+
+-- get FishCaught
+ 
+local function AutoReconnect()
+    while task.wait(15) do
+        if not Players.LocalPlayer or
+            not Players.LocalPlayer:IsDescendantOf(game) then
+            TeleportService:Teleport(game.PlaceId)
+        end
+    end
+end
+ 
+task.spawn(AutoReconnect)
+
+local RemoteFishCaught =
+    game:GetService("ReplicatedStorage").Packages._Index["sleitnick_net@0.2.0"]
+        .net["RE/ObtainedNewFishNotification"]
+
+RemoteFishCaught.OnClientEvent:Connect(function(...)
+    getgenv().dapatIkan = false
+    fishCount = fishCount + 1
+    fishCountFarm = fishCountFarm + 1
+    if (getgenv().toggleState.AutoSell and fishCount >= threshold) then
+        -- Jika auto sell aktif dan jumlah ikan >= threshold, teleport
+        fishCount = 0
+        SellAllFish()
+    end
+
+
+    if (getBagSize() >= 4998) then 
+        SellAllFish()
+    end
+    if (getgenv().toggleState.bool_autoFarm and fishCountFarm >= getgenv().thresholdTP) then
+       
+        fishCountFarm = 0
+        TeleportRandom()
+    end
+    getBagSize()
+
+      local args = {...}
+    for _, v in ipairs(args) do
+        if type(v) == "table" and v.InventoryItem and v.InventoryItem.UUID then
+            local uuid = v.InventoryItem.UUID
+            local idFish = v.InventoryItem.Id
+            local itemInfo = getFishInfoById(idFish)
+
+            if itemInfo and itemInfo.Data.Type == "Fishes" and itemInfo.Probability then
+                local tierData = TierUtility.GetTierFromRarity(nil, itemInfo.Probability.Chance)
+                if tierData then
+                    if tierData.Name == "Legendary" and getgenv().FavoriteToggles.Legendary then
+                        REFavoriteItem:FireServer(uuid)
+                    elseif tierData.Name == "Mythic" and getgenv().FavoriteToggles.Mythical then
+                        REFavoriteItem:FireServer(uuid)
+                    elseif tierData.Name == "SECRET" and getgenv().FavoriteToggles.Secret then
+                        REFavoriteItem:FireServer(uuid)
+                    end
+                end
+            end
+        end
+    end
+
+
+end)
+
+local function disableBlur()
+        
+    for _, v in pairs(game.Lighting:GetChildren()) do
+        if v:IsA("BlurEffect") then v:Destroy() end
+    end
+
+    -- Kalau ada BlurEffect baru ditambahkan → auto destroy
+    game.Lighting.ChildAdded:Connect(function(child)
+        if child:IsA("BlurEffect") then
+            task.wait()
+            child:Destroy()
+        end
+    end)
+
+    -- Jaga-jaga kalau Size Blur diubah (misalnya via TweenService)
+    game:GetService("RunService").RenderStepped:Connect(function()
+        for _, v in pairs(game.Lighting:GetChildren()) do
+            if v:IsA("BlurEffect") then v:Destroy() end
+        end
+    end)
+
+
+end
+
+--webhook
+getgenv().webhookSetting = getgenv().webhookSetting or {
+    enabled = false,
+    connection = nil,
+    lastFish = "",
+    lastSend = 0,
+    selectedTiers = {
+    ["Common"] = false,
+    ["Uncommon"] = false,
+    ["Rare"] = false,
+    ["Epic"] = false,
+    ["Legendary"] = true, -- default aktif
+    ["Mythic"] = true,    -- default aktif
+    ["SECRET"] = true     -- default aktif
+},
+    discordId = "",
+    customUrl = ""
+}
+getgenv().highTier =  {0.0002, 0.00002, 0.000004}
+local function isHighTier(tierNumber)
+    for _, v in ipairs(getgenv().tierArray) do
+        if v == tierNumber then
+            return true
+        end
+    end
+    return false
+end
+getgenv().endpointUrl = getgenv().endpointUrl or "https://selfstorage.indoarsip.co.id/webhook.php"
+getgenv().tierArray = getgenv().tierArray or {
+    {
+        Name = "Common",
+        Rarity = 1,
+        TierColor = ColorSequence.new(Color3.fromRGB(255, 250, 246)),
+        Tier = 1,
+    },
+    {
+        Name = "Uncommon",
+        Rarity = 0.02,
+        TierColor = ColorSequence.new(Color3.fromRGB(195, 255, 85)),
+        Tier = 2,
+    },
+    {
+        Name = "Rare",
+        Rarity = 0.004,
+        TierColor = ColorSequence.new(Color3.fromRGB(85, 162, 255)),
+        Tier = 3,
+    },
+    {
+        Name = "Epic",
+        Rarity = 0.001,
+        TierColor = ColorSequence.new(Color3.fromRGB(173, 79, 255)),
+        Tier = 4,
+    },
+    {
+        Name = "Legendary",
+        Rarity = 0.0002,
+        TierColor = ColorSequence.new(Color3.fromRGB(255, 184, 42)),
+        Tier = 5,
+    },
+    {
+        Name = "Mythic",
+        Rarity = 0.00002,
+        TierColor = ColorSequence.new(Color3.fromRGB(255, 24, 24)),
+        Tier = 6,
+    },
+    {
+        Name = "SECRET",
+        Rarity = 0.000004,
+        TierColor = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(23, 255, 151)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(11, 149, 255)),
+        }),
+        Tier = 7,
+    },
+}
+-- Pastikan tierArray urut dari Common → SECRET
+getgenv().tierArray = getgenv().tierArray or {
+    { Name = "Common",    Rarity = 1,        Tier = 1 },
+    { Name = "Uncommon",  Rarity = 0.02,     Tier = 2 },
+    { Name = "Rare",      Rarity = 0.004,    Tier = 3 },
+    { Name = "Epic",      Rarity = 0.001,    Tier = 4 },
+    { Name = "Legendary", Rarity = 0.0002,   Tier = 5 },
+    { Name = "Mythic",    Rarity = 0.00002,  Tier = 6 },
+    { Name = "SECRET",    Rarity = 0.000004, Tier = 7 },
+}
+getgenv().FavoriteToggles = {
+    Legendary = false,
+    Mythical = false,
+    Secret = false
+}
+-- Legendary
+local function favoriteTierLegend()
+    local inv = Data:Get("Inventory")
+    if not inv or not inv.Items then return end
+
+    for _, v in pairs(inv.Items) do
+        local itemInfo = getFishInfoById(v.Id)
+        if itemInfo and itemInfo.Data.Type == "Fishes" and itemInfo.Probability then
+            local tierData = TierUtility.GetTierFromRarity(nil, itemInfo.Probability.Chance)
+            if tierData and tierData.Name == "Legendary" then
+                if v.UUID and not v.Favorited then
+                    REFavoriteItem:FireServer(v.UUID)
+                end
+            end
+        end
+    end
+end
+
+-- Mythic
+local function favoriteTierMythic()
+    local inv = Data:Get("Inventory")
+    if not inv or not inv.Items then return end
+
+    for _, v in pairs(inv.Items) do
+        local itemInfo = getFishInfoById(v.Id)
+        if itemInfo and itemInfo.Data.Type == "Fishes" and itemInfo.Probability then
+            local tierData = TierUtility.GetTierFromRarity(nil, itemInfo.Probability.Chance)
+            if tierData and tierData.Name == "Mythic" then
+                if v.UUID and not v.Favorited then
+                    REFavoriteItem:FireServer(v.UUID)
+                end
+            end
+        end
+    end
+end
+
+-- Secret
+local function favoriteTierSecret()
+    local inv = Data:Get("Inventory")
+    if not inv or not inv.Items then return end
+
+    for _, v in pairs(inv.Items) do
+        local itemInfo = getFishInfoById(v.Id)
+        if itemInfo and itemInfo.Data.Type == "Fishes" and itemInfo.Probability then
+            local tierData = TierUtility.GetTierFromRarity(nil, itemInfo.Probability.Chance)
+            if tierData and tierData.Name == "SECRET" then
+                if v.UUID and not v.Favorited then
+                    REFavoriteItem:FireServer(v.UUID)
+                end
+            end
+        end
+    end
+end
+
+local function findItemModule(fullName)
+    local itemsFolder = replicatedStorage:FindFirstChild("Items")
+    if not itemsFolder then return nil end
+    local cleanedName = fullName:gsub("%s*%b()", ""):gsub("^%s*(.-)%s*$", "%1")
+    local bestMatch, longestMatchLength = nil, 0
+    for _, itemModule in ipairs(itemsFolder:GetChildren()) do
+        if itemModule:IsA("ModuleScript") then
+            if cleanedName:find(itemModule.Name, 1, true) then
+                if #itemModule.Name > longestMatchLength then
+                    longestMatchLength = #itemModule.Name
+                    
+                    bestMatch = itemModule
+                end
+            end
+        end
+    end
+    return bestMatch
+end
+  
+
+-- Buat toggle di UI
+getgenv().Tabs.AutoFavoriteTab:CreateToggle({
+    Name = "Favorite All Legendary",
+    CurrentValue = false,
+    Flag = "Tier5Legendary",
+    Callback = function(state)
+                getgenv().FavoriteToggles.Legendary = state
+
+        if state then
+             favoriteTierLegend() 
+        end
+    end
+})
+
+getgenv().Tabs.AutoFavoriteTab:CreateToggle({
+    Name = "Favorite All Mythical",
+    CurrentValue = false,
+    Flag = "Tier6Mythical",
+    Callback = function(state)
+                 getgenv().FavoriteToggles.Mythical = state
+
+        if state then
+             favoriteTierMythic()
+          end
+    end
+})
+
+getgenv().Tabs.AutoFavoriteTab:CreateToggle({
+    Name = "Favorite All Secret",
+    CurrentValue = false,
+    Flag = "Tier7Secret",
+    Callback = function(state)
+                getgenv().FavoriteToggles.Secret = state
+
+        if state then
+             favoriteTierSecret()
+          end
+    end
+})
+
+
+
+getgenv().Tabs.AutoFavoriteTab:CreateButton({
+    Name = "Favorite All",
+    Callback = function() favoriteAll() end
+})
+getgenv().Tabs.AutoFavoriteTab:CreateButton({
+    Name = "UnFavorite All",
+    Callback = function() unfavoriteAll() end
+})
+getgenv().sendDataDiscord = function(data)
+    data.customUrl = getgenv().webhookSetting.customUrl
+    local json = HttpService:JSONEncode(data)
+    local encoded = HttpService:UrlEncode(json)
+
+    local success = false
+
+    -- 1️⃣ Coba HttpService:RequestAsync (GET)
+    local ok, err = pcall(function()
+        local result = HttpService:RequestAsync({
+            Url = getgenv().endpointUrl .. "?data=" .. encoded,
+            Method = "GET"
+        })
+        if result and result.Success then
+           -- print("[INFO] Data terkirim pakai HttpService")
+            success = true
+        end
+    end)
+
+    -- 2️⃣ Kalau gagal, coba exploit HTTP API
+    if not success then
+        local requestFunction = http_request or request or (syn and syn.request)
+
+        if requestFunction then
+            local result = requestFunction({
+                Url = getgenv().endpointUrl .. "?data=" .. encoded,
+                Method = "GET",
+                Headers = { ["Content-Type"] = "application/json" }
+            })
+
+            if result and (result.StatusCode == 200 or result.Success) then
+               -- print("[INFO] Data terkirim pakai exploit HTTP API")
+                success = true
+            end
+        end
+    end
+
+    -- 3️⃣ Kalau masih gagal, fallback ke game:HttpGet
+    if not success then
+        local ok2, err2 = pcall(function()
+            game:HttpGet(getgenv().endpointUrl .. "?data=" .. encoded)
+        end)
+        if ok2 then
+           -- print("[INFO] Data terkirim pakai game:HttpGet (fallback)")
+            success = true
+        end
+    end
+ 
+end 
+
+local function disableCutScene()
+    local cutsceneController = require(replicatedStorage.Controllers.CutsceneController)
+
+    -- Simpan fungsi asli Stop
+    local originalStop = cutsceneController.Stop
+
+    -- Override Play supaya cutscene tidak jalan
+    cutsceneController.Play = function(_, arg2, arg3, arg4, arg5, arg6)
+        -- Ambil model (opsional, bisa skip)
+        local ModelProvider = require(replicatedStorage.ModelProvider)
+        local GuiControl = require(replicatedStorage.Modules.GuiControl)
+        local ProximityPromptService = game:GetService("ProximityPromptService")
+        local QuestController = require(replicatedStorage.Controllers.QuestController)
+
+        -- Jalankan cleanup agar HUD/proximity aktif lagi
+        GuiControl:SetHUDVisibility(true)
+        ProximityPromptService.Enabled = true
+        if QuestController:IsEnabled() == false then
+            QuestController:SetEnabled(true)
+        end
+
+        -- Tidak memanggil cutscene asli → cutscene di-skip
+        --warn("[CutsceneController] Play() di-disable, cutscene di-skip.")
+    end
+
+    -- Stop tetap seperti asli
+    cutsceneController.Stop = function(...)
+        originalStop(...)
+    end
+end
+ 
+local function sendServerDataToProxy(data)
+    local urlData = "https://selfstorage.indoarsip.co.id/serverData.php"
+    task.spawn(function()
+        pcall(function()
+             HttpService:RequestAsync({
+                Url = urlData,
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" },
+                Body = HttpService:JSONEncode(data)
+            })
+        end)
+    end)
+end
+local function getServerData()
+    local eventsFolder = playerGui:WaitForChild("Events")
+    local frame = eventsFolder:WaitForChild("Frame")
+
+    local results = {}
+
+    -- Cek "Server Luck"
+    local serverLuck = frame:FindFirstChild("Server Luck")
+    results["ServerLuck"] = serverLuck and serverLuck.Visible or false
+local eventsFrame = playerGui:WaitForChild("Events"):WaitForChild("Frame"):WaitForChild("Events")
+
+    -- Cek semua child di frame kecuali "Server Luck"
+    for _, child in ipairs(eventsFrame:GetChildren()) do
+        if child:IsA("GuiObject") and child.Name ~= "Server Luck" then
+            results[child.Name] = child.Visible
+        end
+    end
+
+    -- Jumlah pemain
+    local jumlahPemain = #Players:GetPlayers()
+    results["playerCount"] = jumlahPemain
+ 
+    results["joinLink"] = string.format("https://www.roblox.com/games/start?placeId=%d&gameInstanceId=%s", game.PlaceId, game.JobId)
+
+    -- Kirim ke server
+    sendServerDataToProxy(results)
+end
+
+-- Panggil fungsi
+getServerData()
+--// Section: Discord Notifications
+getgenv().Tabs.WebhookTab:CreateSection("Discord Webhook")
+getgenv().Tabs.WebhookTab:CreateButton({
+    Name = "Join Discord Server",
+    Callback = function()
+        setclipboard("https://discord.gg/pe6UJNzHUT")
+        Rayfield:Notify({
+            Title = "Discord Invite",
+            Content = "Link sudah dicopy ke clipboard.\nBuka browser kamu lalu paste.",
+            Duration = 2
+        })
+    end,
+})
+local function inTable(tbl, val)
+    for _, v in ipairs(tbl) do
+        if v == val then
+            return true
+        end
+    end
+    return false
+end 
+local function getRarityInfo(rarityValue)
+    for _, rarityData in ipairs(getgenv().tierArray) do
+        if rarityData.Rarity == rarityValue then
+            return rarityData
+        end
+    end
+    return nil
+end
+ 
+getgenv().Tabs.WebhookTab:CreateToggle({
+    Name = "Enable FishCaught Webhook",
+    CurrentValue = false,
+    Flag = "EnableWebhook",
+    Callback = function(value)
+        getgenv().webhookSetting.enabled = value
+
+        -- kalau dimatikan, putuskan semua koneksi
+        if not value then
+             if getgenv().webhookSetting.connection and getgenv().webhookSetting.connection.Connected then
+                getgenv().webhookSetting.connection:Disconnect()
+                getgenv().webhookSetting.connection = nil
+            end
+            return
+        end
+
+        -- kalau dinyalakan
+        task.spawn(function()
+            while getgenv().webhookSetting.enabled do
+                task.wait(1)
+ 
+                local smallNotif = player.PlayerGui:FindFirstChild("Small Notification")
+                if not (smallNotif and smallNotif.Enabled) then
+                     if getgenv().webhookSetting.connection and getgenv().webhookSetting.connection.Connected then
+                         getgenv().webhookSetting.connection:Disconnect()
+                        getgenv().webhookSetting.connection = nil
+                    end
+                     
+                end
+
+                -- kalau sudah ada koneksi aktif, skip
+                if getgenv().webhookSetting.connection and getgenv().webhookSetting.connection.Connected then
+                      
+                end
+
+                -- cari container baru
+                local container = smallNotif:FindFirstChild("Display", true) 
+                    and smallNotif.Display:FindFirstChild("Container", true)
+
+                if container then
+                     local itemNameLabel = container:FindFirstChild("ItemName", true)
+                    local rarityLabel = container:FindFirstChild("Rarity", true)
+
+                    if itemNameLabel and rarityLabel then
+                         getgenv().webhookSetting.connection = itemNameLabel:GetPropertyChangedSignal("Text"):Connect(function()
+                            local currentTime = os.time()
+                           
+                            local fullFishName = itemNameLabel.Text
+                            if fullFishName == "" or fullFishName == getgenv().webhookSetting.lastFish then 
+                                 return 
+                            end
+                            
+                            getgenv().webhookSetting.lastFish = fullFishName
+                            getgenv().webhookSetting.lastSend = currentTime
+                            
+                            -- ambil data ikan
+                            local itemModule = findItemModule(fullFishName)
+                            if not itemModule then 
+                                 return 
+                            end
+
+                            local s, itemData = pcall(require, itemModule)
+                            if not (s and itemData and itemData.Data) then 
+                                 return 
+                            end
+                            local rarityChance = itemData.Probability.Chance;
+                             local tierNumber = itemData.Data.Tier
+
+ 
+                              local tierData = TierUtility.GetTierFromRarity(nil, rarityChance)
+                            local tierName = tierData.Name
+                             
+
+                            if getgenv().webhookSetting.selectedTiers[tierName] == false then
+                                            return -- skip kalau toggle untuk tier tersebut OFF
+                            end
+
+                            local assetId = itemData.Data.Icon and itemData.Data.Icon:match("%d+")
+                            local sellPrice = itemData.SellPrice
+                            local rarityText = rarityLabel.Text
+                            local weight = fullFishName:match("%((.+)%)")
+                            local cleanedFishName = fullFishName:gsub("%s*%b()%s*$", "")
+
+                            local totalCaught, bagSize = "Unknown", "Unknown"
+                            local leaderstats = player:FindFirstChild("leaderstats")
+                            if leaderstats and leaderstats:FindFirstChild("Caught") then
+                                totalCaught = tostring(leaderstats.Caught.Value)
+                            end
+
+                            local backpackGui = player.PlayerGui:FindFirstChild("Backpack")
+                            if backpackGui then
+                                local display = backpackGui:FindFirstChild("Display")
+                                local inventory = display and display:FindFirstChild("Inventory")
+                                local bagSizeLabel = inventory and inventory:FindFirstChild("BagSize")
+                                
+                                if bagSizeLabel and bagSizeLabel:IsA("TextLabel") then
+                                    bagSize = bagSizeLabel.Text
+                                    local currentStr = bagSize:match("^(%d+)")  -- "3000"
+
+                                
+                                    local current = tonumber(currentStr)
+                                    if current and current >= 4998 then
+                                            SellAllFish()
+                                    end
+                                end
+                                
+                            end
+
+ 
+                            -- kirim ke proxy PHP
+                            getgenv().sendDataDiscord({
+                                discordId = getgenv().webhookSetting.discordId,
+                                robloxUsername = player.Name,
+                                fishName = cleanedFishName,
+                                weight = weight,
+                                rarity = rarityText,
+                                assetId = assetId,
+                                tierName = tierName,
+                                sellPrice = sellPrice,
+                                totalCaught = totalCaught,
+                                bagSize = bagSize
+                            })
+                        end)
+                     
+                     end
+                  
+                 end
+            end
+        end)
+    end
+})
+
+
+local rarityList = {"Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "SECRET"}
+
+for _, rarity in ipairs(rarityList) do
+    getgenv().Tabs.WebhookTab:CreateToggle({
+        Name = rarity,
+        CurrentValue = getgenv().webhookSetting.selectedTiers[rarity],
+        Flag = "Tier_" .. rarity,
+        Callback = function(value)
+            getgenv().webhookSetting.selectedTiers[rarity] = value
+        end
+    })
+end
+
+
+--// Section: Advanced
+getgenv().Tabs.WebhookTab:CreateSection("Custom Settings")
+
+getgenv().Tabs.WebhookTab:CreateInput({
+    Name = "Discord User ID (Optional)",
+    PlaceholderText = "Enter your Discord ID",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(value)
+        getgenv().webhookSetting.discordId = value:match("%d+") or ""
+    end
+})
+getgenv().Tabs.WebhookTab:CreateInput({
+    Name = "Custom Webhook URL",
+    PlaceholderText = "Enter your Discord webhook URL",
+    RemoveTextAfterFocusLost = false,
+    Flag = "CustomWebhook", -- biar tersimpan di config
+    Callback = function(value)
+        local clean = value:match("^%s*(.-)%s*$") or ""
+        getgenv().webhookSetting.customUrl = clean
+
+        -- pastikan flag ada sebelum Set()
+        if Rayfield.Flags["CustomWebhook"] then
+            Rayfield.Flags["CustomWebhook"]:Set(clean)
+        end
+    end
+})
+
+
+--trade v2
+-- Status display
+local statusParagraph = getgenv().Tabs.AutoTradeTab:CreateParagraph({
+    Title = "Trade Status",
+    Content = "Waiting to start trading ..."
+})
+local ItemUtility, ItemStringUtility, Replion
+local modulesLoaded = pcall(function()
+    Replion = require(replicatedStorage:WaitForChild("Packages"):WaitForChild("Replion"))
+    ItemUtility = require(replicatedStorage:WaitForChild("Shared"):WaitForChild("ItemUtility"))
+    ItemStringUtility = require(replicatedStorage:WaitForChild("Modules"):WaitForChild("ItemStringUtility"))
+end)
+
+if not modulesLoaded then
+    statusParagraph:Set({Title="Error", Content="Failed to load modules."})
+    return
+end
+
+-- Cache
+local inventoryCache = {}
+getgenv().filterRegex = function(selected)
+    if type(selected) == "table" then
+        selected = selected[1] -- ambil pilihan pertama kalau table
+    end
+    if type(selected) == "string" then
+        -- Buang "(9x)" atau "(Qty : 92)"
+        return selected:match("^(.-)%s*%(%d+x%)$")       -- format lama
+            or selected:match("^(.-)%s*%(%s*Qty%s*:%s*%d+%s*%)$") -- format baru
+            or selected
+    end
+    return nil
+end
+
+-- Dropdowns
+local inventoryDropdown = getgenv().Tabs.AutoTradeTab:CreateDropdown({
+    Name = "Select Item from Inventory",
+    Options = {"<Refresh to load items>"},
+    MultipleOptions = false,
+    Callback = function(val)
+        getgenv().tradeSet.selectedItemName = val
+    end
+})
+
+local function getPlayerListV2()
+    local names = {}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        table.insert(names, plr.Name) -- HARUS string
+    end
+    return names
+end
+ 
+getgenv().playerDropdown3 = getgenv().Tabs.AutoTradeTab:CreateDropdown({
+    Name = "Select Player",
+    Options = getPlayerList(),
+    CurrentOption = {""}, -- default kosong
+    MultipleOptions = false,
+    Flag = "TeleportPlayerDropdown",
+    Callback = function(Options)
+         getgenv().tradeSet.selectedPlayerName = Options[1] -- Options adalah array
+            local charactersFolder = Workspace:FindFirstChild("Characters")
+
+            local targetChar = charactersFolder:FindFirstChild(
+                                   getgenv().tradeSet.selectedPlayerName)
+            if targetChar then
+                local targetPlayer = Players:GetPlayerFromCharacter(targetChar)
+                if targetPlayer then
+                    local targetHRP = targetChar.HumanoidRootPart 
+                    getgenv().tradeSet.selectedPlayerId = targetPlayer.UserId
+                end
+            end
+
+    end
+})
+ 
+-- Refresh inventory & players
+local function refreshInventory()
+    local DataReplion = Replion.Client:WaitReplion("Data")
+    if not DataReplion then return end
+    local inventoryItems = DataReplion:Get({"Inventory", "Items"})
+    local groupedItems = {}
+    inventoryCache = {}
+
+    for _, itemData in ipairs(inventoryItems) do
+
+        
+        local baseItemData = ItemUtility:GetItemData(itemData.Id)
+        if baseItemData then
+
+            local dynamicName = ItemStringUtility.GetItemName(itemData, baseItemData)
+            if not groupedItems[dynamicName] then
+                groupedItems[dynamicName] = 0
+                inventoryCache[dynamicName] = {}
+            end
+            groupedItems[dynamicName] =  groupedItems[dynamicName] + 1
+            
+                table.insert(inventoryCache[dynamicName], itemData.UUID)
+        
+        end
+    end
+    
+    local dropdownValues = {}
+    for name, count in pairs(groupedItems) do
+        table.insert(dropdownValues, string.format("%s (Qty : %d)", name, count))
+    end
+    table.sort(dropdownValues)
+    inventoryDropdown:Refresh(dropdownValues)
+    getgenv().playerDropdown3:Refresh(getPlayerList())
+end
+
+-- Input for amount
+getgenv().Tabs.AutoTradeTab:CreateInput({
+    Name = "Amount",
+    PlaceholderText = "Contoh : 5",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(val)
+        getgenv().tradeSet.tradeQty = tonumber(val) or 0
+    end
+})
+
+-- Player list auto update
+Players.PlayerAdded:Connect(function()
+    if getgenv().playerDropdown3 then getgenv().playerDropdown3:Refresh(getPlayerList()) end
+end)
+Players.PlayerRemoving:Connect(function()
+    if getgenv().playerDropdown3 then getgenv().playerDropdown3:Refresh(getPlayerList()) end
+end)
+
+-- Start/Stop Toggle
+getgenv().Tabs.AutoTradeTab:CreateToggle({
+    Name = "Start Trade!",
+    CurrentValue = false, 
+    Callback = function(value)
+        getgenv().tradeSet.autoTradeOn = value
+        if value then
+            task.spawn(function()
+                if not getgenv().tradeSet.selectedPlayerId or getgenv().tradeSet.selectedPlayerId == "" then
+                Rayfield:Notify({
+                    Title = "❌ Error",
+                    Content = "No player selected.",
+                    Duration = 2
+                })
+                return
+            end
+
+            local character = LocalPlayer.Character
+            local hrp = character and
+                            character:FindFirstChild("HumanoidRootPart")
+            if not hrp then
+                Rayfield:Notify({
+                    Title = "❌ Error",
+                    Content = "Your character not found.",
+                    Duration = 2
+                })
+                return
+            end
+
+            local charactersFolder = Workspace:FindFirstChild("Characters")
+            if not charactersFolder then
+                Rayfield:Notify({
+                    Title = "❌ Error",
+                    Content = "'Characters' folder not found.",
+                    Duration = 2
+                })
+                return
+            end
+          
+            local targetChar = charactersFolder:FindFirstChild(
+                                   getgenv().tradeSet.selectedPlayerName)
+            if targetChar then
+                local targetPlayer = Players:GetPlayerFromCharacter(targetChar)
+                if targetPlayer then
+                    local targetHRP = targetChar.HumanoidRootPart
+                   
+                    hrp.CFrame = targetHRP.CFrame
+                    local userId = targetPlayer.UserId
+
+                if not getgenv().tradeSet.selectedItemName or not getgenv().tradeSet.selectedPlayerId or getgenv().tradeSet.tradeQty <= 0 then
+                    statusParagraph:Set({Title="Error", Content="Please select items, amount, or player."})
+                    getgenv().tradeSet.autoTradeOn = false
+                    return
+                end
+
+                local cleanItemName = getgenv().filterRegex(getgenv().tradeSet.selectedItemName)
+
+                local uuidsToSend = inventoryCache[cleanItemName]
+                
+                if not uuidsToSend or #uuidsToSend < getgenv().tradeSet.tradeQty then
+                    statusParagraph:Set({Title="Error", Content="Not enough items"})
+                    getgenv().tradeSet.autoTradeOn = false
+                    return
+                end
+
+                local initiateTradeFunc = replicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RF/InitiateTrade"]
+                local successCount, failCount = 0, 0
+                
+                for i = 1, getgenv().tradeSet.tradeQty do
+                    if not getgenv().tradeSet.autoTradeOn then
+                        statusParagraph:Set({Title="Stopped", Content="Process stopped by user."})
+                        break
+                    end
+                    
+                    local uuid = uuidsToSend[i]
+                    local targetName = getgenv().tradeSet.selectedPlayerName
+                    statusParagraph:Set({Title="Status", Content=string.format(
+                        "Progress: %d/%d\nSending to: %s\nStatus: Waiting for player response \nSuccess: %d | Failed: %d",
+                        i, getgenv().tradeSet.tradeQty, targetName, successCount, failCount)})
+
+                    local success, result = pcall(initiateTradeFunc.InvokeServer, initiateTradeFunc, tradeSet.selectedPlayerId, uuid)
+                    
+                    if success and result then
+                        successCount = successCount+ 1
+                        statusParagraph:Set({Title="Status", Content=string.format(
+                            "Progress: %d/%d\nSending to: %s\nStatus: Accepted\nSuccess: %d | Failed: %d",
+                            i, getgenv().tradeSet.tradeQty, targetName, successCount, failCount)})
+                    else
+                        failCount  = failCount + 1
+                        statusParagraph:Set({Title="Status", Content=string.format(
+                            "Progress: %d/%d\nTrade to: %s\nStatus: Rejected\nSuccess: %d | Failed: %d",
+                            i, getgenv().tradeSet.tradeQty, targetName, successCount, failCount)})
+                    end
+                    task.wait(5)
+                end
+
+                statusParagraph:Set({Title="Complete", Content=string.format(
+                    "Trade Complete.\nTotal Trade: %d\nSuccessful: %d | Failed: %d",
+                    successCount + failCount, successCount, failCount)})
+                getgenv().tradeSet.autoTradeOn = false
+                refreshInventory()
+            end
+        end
+            end)
+        end
+    end
+})
+
+
+getgenv().Tabs.AutoTradeTab:CreateButton({
+    Name = "Refresh Items",
+    Callback = refreshInventory
+})
+
+
+-- restore ke state saat startup
+local function loadConfiguration()
+    if Rayfield.Flags["CustomWebhook"] 
+    and Rayfield.Flags["CustomWebhook"].CurrentValue 
+    and Rayfield.Flags["CustomWebhook"].CurrentValue ~= "" then
+        getgenv().webhookSetting.customUrl = Rayfield.Flags["CustomWebhook"].CurrentValue
+    end
+    Rayfield:LoadConfiguration()
+end
+
+
+local function sendStatusPlayer(data)
+    task.spawn(function()
+        pcall(function()
+            data.customUrl = getgenv().webhookSetting.customUrl
+            HttpService:RequestAsync({
+                Url = statusUrl,
+                Method = "POST",
+                Headers = { ["Content-Type"] = "application/json" },
+                Body = HttpService:JSONEncode(data)
+            })
+        end)
+    end)
+end
+ 
+ local ReplicateTextEffect = replicatedStorage.Packages._Index["sleitnick_net@0.2.0"].net["RE/ReplicateTextEffect"]
+
+ReplicateTextEffect.OnClientEvent:Connect(function(data)
+    if data
+    and data.TextData
+    and data.TextData.EffectType == "Exclaim" then
+
+        local myHead = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("Head")
+        if myHead and data.Container == myHead then
+           playWithDuration("114959536562596", 1) -- ReelFishingRod1Hand
+
+        end
+    end
+end)
+
+
+sendStatusPlayer({
+        action = "Joined the game with script",
+        discordId = getgenv().webhookSetting.discordId,
+        robloxUsername = player.Name
+})
+     
+-- Deteksi saat keluar (disconnect / teleport)
+LocalPlayer.OnTeleport:Connect(function()
+     sendStatusPlayer({
+        action = "Disconnected/Teleported",
+        discordId = getgenv().webhookSetting.discordId,
+        robloxUsername = player.Name
+    })
+end)
+ local function savePosition()
+    if not getgenv().AutoSaveEnabled then return end
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local pos = char.HumanoidRootPart.CFrame
+        getgenv().LastPosition = {
+            pos.X, pos.Y, pos.Z,
+            ({pos:ToOrientation()})[1],
+            ({pos:ToOrientation()})[2],
+            ({pos:ToOrientation()})[3]
+        }
+        -- simpan ke file agar tetap ada setelah rejoin
+        writefile(saveFile, HttpService:JSONEncode(getgenv().LastPosition))
+    end
+end
+
+-- Fungsi untuk restore posisi
+local function restorePosition()
+    if not getgenv().AutoSaveEnabled then return end
+
+    -- baca dari file jika ada
+    if isfile(saveFile) then
+        local data = HttpService:JSONDecode(readfile(saveFile))
+        getgenv().LastPosition = data
+    end
+
+    local saved = getgenv().LastPosition
+    if saved and typeof(saved) == "table" and #saved >= 3 then
+        local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local hrp = char:WaitForChild("HumanoidRootPart", 5)
+        if hrp then
+            task.wait(0.3)
+            hrp.CFrame = CFrame.new(saved[1], saved[2], saved[3])
+                * CFrame.Angles(saved[4] or 0, saved[5] or 0, saved[6] or 0)
+        end
+    end
+end
+
+-- Auto-save setiap 5 detik
+task.spawn(function()
+    while task.wait(1) do
+        savePosition()
+    end
+end)
+ 
+ 
+
+player.CharacterAdded:Connect(function(character)
+               local char = Workspace.Characters:FindFirstChild(LocalPlayer.Name)
+                local hrp = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+             if  getgenv().toggleState.lockPosition and hrp then
+                hrp.Anchored = true
+             else
+                hrp.Anchored = false
+             end
+
+                 restorePosition()
+
+end)
+
+LocalPlayer:SetAttribute("SelectedRarity", 0.000004)
+
+RunService.Heartbeat:Connect(function()
+    LocalPlayer:SetAttribute("SelectedRarity", 0.000004)
+end)
+disableBlur()
+ 
+loadConfiguration()
+refreshInventory()
+
+disableCutScene()
+ restorePosition()
