@@ -52,7 +52,7 @@ getgenv().oldAFKScript = hookmetamethod(game, "__namecall", newcclosure(function
 
     return getgenv().oldAFKScript(self, ...)
 end))
-local PromptController = require(replicatedStorage.Controllers.PromptController)
+    PromptController = require(replicatedStorage:WaitForChild("Controllers"):WaitForChild("PromptController"))
 
 local oldDrawPrompt = PromptController.DrawPrompt
 local oldFirePrompt = PromptController.FirePrompt
