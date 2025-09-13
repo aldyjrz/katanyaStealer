@@ -11,7 +11,7 @@ end)
 local oldFirePrompt
 local AutoAcceptTrade
  AutoAcceptTrade  = getgenv().Tabs.PlayerSetTab:CreateToggle({
-    Name = "Auto Accept Prompt Trade",
+    Name = "Auto Trade",
     CurrentValue = false,
     Flag = "AutoAcceptTrade",
     Callback = function(value)
@@ -21,7 +21,7 @@ local AutoAcceptTrade
               if modulesLoaded and PromptController and Promise then
                 if not oldFirePrompt then
                     oldFirePrompt = hookfunction(PromptController.FirePrompt, function(self, promptText, ...)
-                        if type(promptText) == "string" and promptText:find("Accept") and promptText:find("from:") or  promptText:find("to give") then
+                        if type(promptText) == "string" and  promptText:find("to give") then
                             return Promise.resolve(true)
                         end
                         return oldFirePrompt(self, promptText, ...)
@@ -41,6 +41,7 @@ local AutoAcceptTrade
     end
 }) 
 
+
 -- Hook metamethod global
 getgenv().oldAFKScript = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
     local method = getnamecallmethod()
@@ -51,3 +52,53 @@ getgenv().oldAFKScript = hookmetamethod(game, "__namecall", newcclosure(function
 
     return getgenv().oldAFKScript(self, ...)
 end))
+local PromptController = require(replicatedStorage.Controllers.PromptController)
+
+local oldDrawPrompt = PromptController.DrawPrompt
+local oldFirePrompt = PromptController.FirePrompt
+getgenv().AutoPromptBindable = nil
+
+PromptController.DrawPrompt = function(self, promptEntry, ...)
+    -- Ambil bindable dari upvalue
+    if not getgenv().AutoPromptBindable then
+        for i = 1, 20 do
+            local ok, name, value = pcall(debug.getupvalue, oldDrawPrompt, i)
+            if ok and name and typeof(value) == "Instance" and tostring(name):lower():find("bindable") then
+                getgenv().AutoPromptBindable = value
+               -- print("[AutoAccept] ✅ BindableEvent ditemukan dari DrawPrompt (index " .. i .. ")")
+                break
+            end
+        end
+    end
+
+    local result = oldDrawPrompt(self, promptEntry, ...)
+
+    local text = tostring(promptEntry.TextPrompt or "")
+    if text:find("Accept") or text:find("from:")  then
+        task.spawn(function()
+            -- Tunggu 1 frame agar listener sudah siap
+            task.wait()  -- menunggu heartbeat berikutnya
+            local playerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+            local promptGui = playerGui:WaitForChild("Prompt")
+            local yesButton = promptGui.Blackout.Options.Yes
+
+            yesButton:SetAttribute("Inactive", nil)
+
+            if getgenv().AutoPromptBindable then
+             --   print("[AutoAccept] Listener siap, Fire YES")
+                getgenv().AutoPromptBindable:Fire(true)
+            else
+            --    warn("[AutoAccept]  Bindable belum ada walau DrawPrompt dipanggil")
+            end
+
+            promptGui.Enabled = false
+        end)
+    end
+
+    return result
+end
+
+-- Biarkan FirePrompt berjalan normal (kita hanya hook DrawPrompt)
+PromptController.FirePrompt = function(self, promptText, ...)
+    return oldFirePrompt(self, promptText, ...)
+end
