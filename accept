@@ -31,7 +31,7 @@ local AutoAcceptTrade
 
             
         else
-            -- Kembalikan fungsi ke normal (dengan prompt)
+            -- Kembalikan fungsi ke normal (dengan prompt) aa
             if oldFirePrompt then
                 hookfunction(PromptController.FirePrompt, oldFirePrompt)
                 oldFirePrompt = nil
