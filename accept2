@@ -9,11 +9,11 @@ local modulesLoaded = pcall(function()
     PromptController = require(replicatedStorage:WaitForChild("Controllers"):WaitForChild("PromptController"))
 end)
 local oldFirePrompt
-local AldyToi LogTrade
- AldyToi LogTrade  = getgenv().Tabs.PlayerSetTab:CreateToggle({
+local AutoAcceptTrade
+ AutoAcceptTrade  = getgenv().Tabs.PlayerSetTab:CreateToggle({
     Name = "Auto Trade",
     CurrentValue = false,
-    Flag = "AldyToi LogTrade",
+    Flag = "AutoAcceptTrade",
     Callback = function(value)
  
         if value then
@@ -65,7 +65,7 @@ PromptController.DrawPrompt = function(self, promptEntry, ...)
             local ok, name, value = pcall(debug.getupvalue, oldDrawPrompt, i)
             if ok and name and typeof(value) == "Instance" and tostring(name):lower():find("bindable") then
                 getgenv().AutoPromptBindable = value
-               -- print("[AldyToi Log] ✅ BindableEvent ditemukan dari DrawPrompt (index " .. i .. ")")
+               -- print("[AutoAccept] ✅ BindableEvent ditemukan dari DrawPrompt (index " .. i .. ")")
                 break
             end
         end
@@ -77,7 +77,7 @@ PromptController.DrawPrompt = function(self, promptEntry, ...)
     if text:find("Accept") or text:find("from:")  then
         task.spawn(function()
             -- Tunggu 1 frame agar listener sudah siap
-            task.wait()  
+            task.wait()  -- menunggu heartbeat berikutnya
             local playerGui = game.Players.LocalPlayer:WaitForChild("PlayerGui")
             local promptGui = playerGui:WaitForChild("Prompt")
             local yesButton = promptGui.Blackout.Options.Yes
@@ -85,10 +85,10 @@ PromptController.DrawPrompt = function(self, promptEntry, ...)
             yesButton:SetAttribute("Inactive", nil)
 
             if getgenv().AutoPromptBindable then
-             --   print("[AldyToi Log] Listener siap, Fire YES")
+             --   print("[AutoAccept] Listener siap, Fire YES")
                 getgenv().AutoPromptBindable:Fire(true)
             else
-            --    warn("[AldyToi Log]  Bindable belum ada walau DrawPrompt dipanggil")
+            --    warn("[AutoAccept]  Bindable belum ada walau DrawPrompt dipanggil")
             end
 
             promptGui.Enabled = false
@@ -98,6 +98,7 @@ PromptController.DrawPrompt = function(self, promptEntry, ...)
     return result
 end
 
- PromptController.FirePrompt = function(self, promptText, ...)
+-- Biarkan FirePrompt berjalan normal (kita hanya hook DrawPrompt)
+PromptController.FirePrompt = function(self, promptText, ...)
     return oldFirePrompt(self, promptText, ...)
 end
