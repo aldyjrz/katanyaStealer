@@ -652,8 +652,6 @@ local TweenService = getService("TweenService")
 local Players = getService("Players")
 local CoreGui = getService("CoreGui")
 
-
-
 -- Interface Management
 
 local Rayfield = useStudio and script.Parent:FindFirstChild('Rayfield') or game:GetObjects("rbxassetid://10804731440")[1]
@@ -731,7 +729,8 @@ local Main = Rayfield.Main
 local MPrompt = Rayfield:FindFirstChild('Prompt')
 local Topbar = Main.Topbar
 local Elements = Main.Elements
- local TabList = Main.TabList
+local LoadingFrame = Main.LoadingFrame
+local TabList = Main.TabList
 local dragBar = Rayfield:FindFirstChild('Drag')
 local dragInteract = dragBar and dragBar.Interact or nil
 local dragBarCosmetic = dragBar and dragBar.Drag or nil
@@ -740,7 +739,8 @@ local dragOffset = 255
 local dragOffsetMobile = 150
 
 Rayfield.DisplayOrder = 100
- 
+LoadingFrame.Version.Text = Release
+
 -- Thanks to Latte Softworks for the Lucide integration for Roblox
 local Icons = useStudio and require(script.Parent.icons) or loadWithTimeout('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua')
 -- Variables
@@ -754,54 +754,6 @@ local searchOpen = false
 local Notifications = Rayfield.Notifications
 
 local SelectedTheme = RayfieldLibrary.Theme.Default
-
-local UserInputService = game:GetService("UserInputService")
-local CoreGui = game:GetService("CoreGui")
-
--- 🗄️ Simpan posisi di global (agar tidak reset setiap reload)
-getgenv().LastPromptPos = getgenv().LastPromptPos or nil
-
--- ✅ Fungsi drag dengan save posisi
-local function anakDrag(frame)
-    local dragging = false
-    local dragInput, dragStart, startPos
-
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = frame.Position
-
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                    -- 💾 Simpan posisi terakhir setiap selesai drag
-                    getgenv().LastPromptPos = frame.Position
-                end
-            end)
-        end
-    end)
-
-    frame.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            dragInput = input
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(
-                startPos.X.Scale,
-                startPos.X.Offset + delta.X,
-                startPos.Y.Scale,
-                startPos.Y.Offset + delta.Y
-            )
-        end
-    end)
-end
-
-
 
 local function ChangeTheme(Theme)
 	if typeof(Theme) == 'string' then
@@ -817,11 +769,18 @@ local function ChangeTheme(Theme)
 
 	Rayfield.Main.Topbar.ChangeSize.ImageColor3 = SelectedTheme.TextColor
 	Rayfield.Main.Topbar.Hide.ImageColor3 = SelectedTheme.TextColor
+	Rayfield.Main.Topbar.Search.ImageColor3 = SelectedTheme.TextColor
 	if Topbar:FindFirstChild('Settings') then
 		Rayfield.Main.Topbar.Settings.ImageColor3 = SelectedTheme.TextColor
 		Rayfield.Main.Topbar.Divider.BackgroundColor3 = SelectedTheme.ElementStroke
 	end
- 
+
+	Main.Search.BackgroundColor3 = SelectedTheme.TextColor
+	Main.Search.Shadow.ImageColor3 = SelectedTheme.TextColor
+	Main.Search.Search.ImageColor3 = SelectedTheme.TextColor
+	Main.Search.Input.PlaceholderColor3 = SelectedTheme.TextColor
+	Main.Search.UIStroke.Color = SelectedTheme.SecondaryElementStroke
+
 	if Main:FindFirstChild('Notice') then
 		Main.Notice.BackgroundColor3 = SelectedTheme.Background
 	end
@@ -886,6 +845,42 @@ local function getAssetUri(id: any): string
 end 
 local UserInputService = game:GetService("UserInputService")
 
+local function anakDrag(frame)
+    local dragging = false
+    local dragInput, dragStart, startPos
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
 
 local function makeDraggable(object, dragObject, enableTaptic, tapticOffset)
 	local dragging = false
@@ -1227,16 +1222,7 @@ local function Hide(notify: boolean?)
 		-- ✅ Setup draggable
 		MPrompt.Active = true
 		MPrompt.Draggable = true 
-		 -- ⬆️ Kembalikan posisi terakhir kalau ada
-		if getgenv().LastPromptPos then
-			MPrompt.Position = getgenv().LastPromptPos
-		else
-			MPrompt.Position = UDim2.new(0.5, 0, 0, -50)
-		end
-
-		-- ✅ Aktifkan drag
-		anakDrag(MPrompt)
-	   makeDraggable(Main, MPrompt, false, {dragOffset, dragOffsetMobile})
+				anakDrag(MPrompt)
 
 	end
 
@@ -1618,99 +1604,14 @@ local function createSettings(window)
 	saveSettings()
 end
 
--- 🔄 Ganti LoadingFrame Rayfield dengan Splash Custom
-local function ShowSplashScreen()
-    local player = Players.LocalPlayer
 
-    -- Blur Effect
-    local blur = Instance.new("BlurEffect")
-    blur.Size = 0
-    blur.Parent = Lighting
-    TweenService:Create(blur, TweenInfo.new(0.5), {Size = 24}):Play()
-
-    -- GUI Root
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "AldySplash"
-    screenGui.ResetOnSpawn = false
-    screenGui.IgnoreGuiInset = true
-    screenGui.Parent = player:WaitForChild("PlayerGui")
-
-    -- Background Frame
-    local bg = Instance.new("Frame")
-    bg.Size = UDim2.new(1, 0, 1, 0)
-    bg.BackgroundColor3 = Color3.fromRGB(30, 20, 45)
-    bg.BackgroundTransparency = 1
-    bg.Parent = screenGui
-    TweenService:Create(bg, TweenInfo.new(0.5), {BackgroundTransparency = 0.3}):Play()
-
-    -- Text Label
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.Text = "AldyToi"
-    label.Font = Enum.Font.GothamBlack
-    label.TextSize = 80
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.TextTransparency = 1
-    label.AnchorPoint = Vector2.new(0.5, 0.5)
-    label.Position = UDim2.new(0.5, 0, 0.5, 0)
-    label.ZIndex = 2
-    label.Parent = screenGui
-
-    -- Gradient Effect
-    local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 180, 120)),  -- hijau toska lembut
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 220, 160)), -- hijau pastel terang
-    })
-    gradient.Rotation = 90
-    gradient.Parent = label
-
-    -- Glow (UIStroke)
-    local glow = Instance.new("UIStroke")
-    glow.Color = Color3.fromRGB(100, 200, 140)
-    glow.Thickness = 2
-    glow.Transparency = 0.7
-    glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    glow.Parent = label
-
-    -- Animate In
-    TweenService:Create(label, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        TextTransparency = 0,
-        TextSize = 100
-    }):Play()
-    TweenService:Create(glow, TweenInfo.new(0.6), {Transparency = 0}):Play()
-
-    task.wait(2.5)
-
-    -- Animate Out
-    TweenService:Create(label, TweenInfo.new(0.4), {TextTransparency = 1, TextSize = 80}):Play()
-    TweenService:Create(glow, TweenInfo.new(0.4), {Transparency = 1}):Play()
-    TweenService:Create(bg, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
-    TweenService:Create(blur, TweenInfo.new(0.4), {Size = 0}):Play()
-
-    task.wait(0.5)
-    screenGui:Destroy()
-    blur:Destroy()
-end
-
--- 🔧 Override Rayfield LoadingFrame (jika ada)
-local Rayfield = game:GetService("CoreGui"):FindFirstChild("Rayfield")
-if Rayfield then
-    local LoadingFrame = Rayfield:FindFirstChild("LoadingFrame", true)
-    if LoadingFrame then
-        LoadingFrame.Visible = false -- Sembunyikan loading bawaan Rayfield
-    end
-end
-
--- 🚀 Tampilkan splash custom
 
 function RayfieldLibrary:CreateWindow(Settings)
-	ShowSplashScreen()
+	print('creating window')
 	if Rayfield:FindFirstChild('Loading') then
 		if getgenv and not getgenv().rayfieldCached then
 			Rayfield.Enabled = true
-			
+		 
 		end
 	end
 
@@ -1755,12 +1656,21 @@ function RayfieldLibrary:CreateWindow(Settings)
 	Main.BackgroundTransparency = 1
 	if Main:FindFirstChild('Notice') then Main.Notice.Visible = false end
 	Main.Shadow.Image.ImageTransparency = 1
+LoadingFrame.Visible = false
+	LoadingFrame.Title.TextTransparency = 1
+	LoadingFrame.Subtitle.TextTransparency = 1
 
-	
 	if Settings.ShowText then
 		MPrompt.Title.Text = 'SC '..Settings.ShowText
 	end
-    
+
+	LoadingFrame.Version.TextTransparency = 1
+	LoadingFrame.Title.Text = Settings.LoadingTitle or "Rayfield"
+	LoadingFrame.Subtitle.Text = Settings.LoadingSubtitle or "Interface Suite"
+
+	if Settings.LoadingTitle ~= "Rayfield Interface Suite" then
+		LoadingFrame.Version.Text = "Rayfield UI"
+	end
 
 	if Settings.Icon and Settings.Icon ~= 0 and Topbar:FindFirstChild('Icon') then
 		Topbar.Icon.Visible = true
@@ -1802,7 +1712,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 
 	Topbar.Visible = false
 	Elements.Visible = false
- 
+	LoadingFrame.Visible = false
+
 	if not Settings.DisableRayfieldPrompts then
 		task.spawn(function()
 			while true do
@@ -2089,7 +2000,12 @@ function RayfieldLibrary:CreateWindow(Settings)
 	TweenService:Create(Main, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
 	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {ImageTransparency = 0.6}):Play()
 	task.wait(0.1)
-	 
+	TweenService:Create(LoadingFrame.Title, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+	task.wait(0.05)
+	TweenService:Create(LoadingFrame.Subtitle, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+	task.wait(0.05)
+	TweenService:Create(LoadingFrame.Version, TweenInfo.new(0.7, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
+
 
 	Elements.Template.LayoutOrder = 100000
 	Elements.Template.Visible = false
@@ -3624,7 +3540,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 	task.wait(1.1)
 	TweenService:Create(Main, TweenInfo.new(0.7, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut), {Size = UDim2.new(0, 390, 0, 90)}):Play()
 	task.wait(0.3)
-	 
+	TweenService:Create(LoadingFrame.Title, TweenInfo.new(0.2, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
+	TweenService:Create(LoadingFrame.Subtitle, TweenInfo.new(0.2, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
+	TweenService:Create(LoadingFrame.Version, TweenInfo.new(0.2, Enum.EasingStyle.Exponential), {TextTransparency = 1}):Play()
+	task.wait(0.1)
 	TweenService:Create(Main, TweenInfo.new(0.6, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {Size = useMobileSizing and UDim2.new(0, 500, 0, 275) or UDim2.new(0, 500, 0, 475)}):Play()
 	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {ImageTransparency = 0.6}):Play()
 
@@ -3633,7 +3552,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 	Topbar.Divider.BackgroundColor3 = SelectedTheme.ElementStroke
 	Topbar.CornerRepair.BackgroundTransparency = 1
 	Topbar.Title.TextTransparency = 1
- 	if Topbar:FindFirstChild('Settings') then
+	Topbar.Search.ImageTransparency = 1
+	if Topbar:FindFirstChild('Settings') then
 		Topbar.Settings.ImageTransparency = 1
 	end
 	Topbar.ChangeSize.ImageTransparency = 1
@@ -3648,7 +3568,8 @@ function RayfieldLibrary:CreateWindow(Settings)
 	TweenService:Create(Topbar.Divider, TweenInfo.new(1, Enum.EasingStyle.Exponential), {Size = UDim2.new(1, 0, 0, 1)}):Play()
 	TweenService:Create(Topbar.Title, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
 	task.wait(0.05)
-  
+	TweenService:Create(Topbar.Search, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {ImageTransparency = 0.8}):Play()
+	task.wait(0.05)
 	if Topbar:FindFirstChild('Settings') then
 		TweenService:Create(Topbar.Settings, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {ImageTransparency = 0.8}):Play()
 		task.wait(0.05)
