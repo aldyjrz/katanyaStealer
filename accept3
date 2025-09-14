@@ -51,3 +51,9 @@ getgenv().oldAFKScript = hookmetamethod(game, "__namecall", newcclosure(function
 
     return getgenv().oldAFKScript(self, ...)
 end))
+
+ 
+-- Auto Accept Trade Request (without prompt)
+getgenv().Remotes.RF_AwaitTradeResponse.OnClientInvoke = function(a, b)
+        return true
+end
