@@ -1252,7 +1252,14 @@ local function Hide(notify: boolean?)
 		-- ✅ Setup draggable
 		MPrompt.Active = true
 		MPrompt.Draggable = true 
-     makeDraggable(MPrompt, MPrompt, true, {0, 0}) -- enableTaptic true, offset bisa disesuaikan
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Parent = MPrompt           -- bisa juga MPrompt.Title jika mau hanya teks
+		stroke.Color = Color3.fromRGB(120, 220, 160) -- warna putih
+		stroke.Thickness = 2              -- tebal garis
+		stroke.Transparency = 0           -- 0 = tidak transparan
+		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border -- bisa juga "Inner" atau "Outer"
+     	makeDraggable(MPrompt, MPrompt, true, {0, 0}) -- enableTaptic true, offset bisa disesuaikan
 
 	end
 
@@ -1680,7 +1687,7 @@ function RayfieldLibrary:CreateWindow(Settings)
 	local Passthrough = false
 	Topbar.Title.Text = Settings.Name
 
-	Main.Size = UDim2.new(0, 420, 0, 100)
+	Main.Size = UDim2.new(0, 420, 0, 130)
 	Main.Visible = true
 	Main.BackgroundTransparency = 0.8
 	if Main:FindFirstChild('Notice') then Main.Notice.Visible = false end
@@ -1901,10 +1908,10 @@ function RayfieldLibrary:CreateWindow(Settings)
 			TweenService:Create(KeyMain, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
 			TweenService:Create(KeyMain, TweenInfo.new(0.6, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 500, 0, 187)}):Play()
 			TweenService:Create(KeyMain.Shadow.Image, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {ImageTransparency = 0.5}):Play()
-			task.wait(0.05)
+			task.wait(0.02)
 			TweenService:Create(KeyMain.Title, TweenInfo.new(0.4, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
 			TweenService:Create(KeyMain.Subtitle, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
-			task.wait(0.05)
+			task.wait(0.02)
 			TweenService:Create(KeyMain.KeyNote, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {TextTransparency = 0}):Play()
 			TweenService:Create(KeyMain.Input, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {BackgroundTransparency = 0}):Play()
 			TweenService:Create(KeyMain.Input.UIStroke, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Transparency = 0}):Play()
