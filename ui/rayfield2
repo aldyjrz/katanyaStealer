@@ -1245,11 +1245,13 @@ local function Hide(notify: boolean?)
 	if MPrompt then
 		MPrompt.Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 		MPrompt.Position = UDim2.new(0.5, 0, 0, -50)
-		MPrompt.Size = UDim2.new(0, 40, 0, 10)
+		MPrompt.Size = UDim2.new(0, 60, 0, 15)
 		MPrompt.BackgroundTransparency = 1
 		MPrompt.Title.TextTransparency = 1
 		MPrompt.Visible = true
 		-- ✅ Setup draggable
+		MPrompt.Title.Active = false
+ 
 		MPrompt.Active = true
 		MPrompt.Draggable = true 
 
@@ -1259,7 +1261,6 @@ local function Hide(notify: boolean?)
 		stroke.Thickness = 2              -- tebal garis
 		stroke.Transparency = 0           -- 0 = tidak transparan
 		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border -- bisa juga "Inner" atau "Outer"
-     	makeDraggable(MPrompt, MPrompt, true, {0, 0}) -- enableTaptic true, offset bisa disesuaikan
 
 	end
 
@@ -1335,7 +1336,11 @@ local function Hide(notify: boolean?)
 	task.wait(0.5)
 	Main.Visible = false
 	Debounce = false
+	makeDraggable(MPrompt, MPrompt, true, {0, 0}) -- enableTaptic true, offset bisa disesuaikan
+
 end
+
+
 
 local function Maximise()
 	Debounce = true
