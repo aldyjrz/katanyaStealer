@@ -1,14 +1,4 @@
  
-local ItemTradingController = require(game:GetService("ReplicatedStorage").Controllers.ItemTradingController)
-
--- Hook CreateTradePrompt agar selalu auto-accept
-local originalCreateTradePrompt = ItemTradingController.CreateTradePrompt
-ItemTradingController.CreateTradePrompt = function(itemInstance, itemData, tradeInfo, extraInfo)
-    print("[AutoTrade] Trade request received from:", (tradeInfo.sender and tradeInfo.sender.DisplayName) or "Unknown")
-     return require(game:GetService("ReplicatedStorage").Packages.Promise).resolve(true)
-end
-
-
 -- Simpan fungsi asli agar bisa dikembalikan
  local Replion, Promise, ItemUtility, ItemStringUtility, PromptController
 local modulesLoaded = pcall(function()
@@ -21,9 +11,9 @@ end)
 local oldFirePrompt
 local AutoAcceptTrade
  AutoAcceptTrade  = getgenv().Tabs.PlayerSetTab:CreateToggle({
-    Name = "Auto Accept Prompt Trade",
+    Name = "Auto Accept Send Trade",
     CurrentValue = false,
-    Flag = "AutoAcceptTrade",
+    Flag = "AutoSendTrade",
     Callback = function(value)
  
         if value then
@@ -31,7 +21,7 @@ local AutoAcceptTrade
               if modulesLoaded and PromptController and Promise then
                 if not oldFirePrompt then
                     oldFirePrompt = hookfunction(PromptController.FirePrompt, function(self, promptText, ...)
-                        if type(promptText) == "string"  and promptText:find("from:") then
+                        if type(promptText) == "string" and promptText:find("Accept") and promptText:find("from:") or  promptText:find("to give") then
                             return Promise.resolve(true)
                         end
                         return oldFirePrompt(self, promptText, ...)
@@ -51,6 +41,31 @@ local AutoAcceptTrade
     end
 }) 
 
+getgenv().acceptTrade = getgenv().acceptTrade or false 
+getgenv().Tabs.PlayerSetTab:CreateToggle({
+    Name = "Auto Accept Prompt Trade",
+    CurrentValue = false,
+    Flag = "AutoAcceptTrade",
+    Callback = function(value)
+            getgenv().acceptTrade = value
+    end
+}) 
+         pcall(function()
+                    local Promise = require(replicatedStorage:WaitForChild("Packages"):WaitForChild("Promise"))
+                    local PromptController = require(replicatedStorage:WaitForChild("Controllers"):WaitForChild("PromptController"))
+                    
+                    local oldFirePrompt = PromptController.FirePrompt
+                    PromptController.FirePrompt = function(self, promptText, ...)
+                        if getgenv().acceptTrade and type(promptText) == "string" and promptText:find("Accept") and promptText:find("from:")   then
+                            
+                            return Promise.new(function(resolve)
+                                task.wait(1.5)
+                                resolve(true)
+                            end)
+                        end
+                        return oldFirePrompt(self, promptText, ...)
+                    end
+  end)
 -- Hook metamethod global
 getgenv().oldAFKScript = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
     local method = getnamecallmethod()

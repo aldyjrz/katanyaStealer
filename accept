@@ -11,9 +11,9 @@ end)
 local oldFirePrompt
 local AutoAcceptTrade
  AutoAcceptTrade  = getgenv().Tabs.PlayerSetTab:CreateToggle({
-    Name = "Auto Accept Prompt Trade",
+    Name = "Auto Accept Send Trade",
     CurrentValue = false,
-    Flag = "AutoAcceptTrade",
+    Flag = "AutoSendTrade",
     Callback = function(value)
  
         if value then
@@ -41,6 +41,31 @@ local AutoAcceptTrade
     end
 }) 
 
+getgenv().acceptTrade = getgenv().acceptTrade or false 
+getgenv().Tabs.PlayerSetTab:CreateToggle({
+    Name = "Auto Accept Prompt Trade",
+    CurrentValue = false,
+    Flag = "AutoAcceptTrade",
+    Callback = function(value)
+            getgenv().acceptTrade = value
+    end
+}) 
+         pcall(function()
+                    local Promise = require(replicatedStorage:WaitForChild("Packages"):WaitForChild("Promise"))
+                    local PromptController = require(replicatedStorage:WaitForChild("Controllers"):WaitForChild("PromptController"))
+                    
+                    local oldFirePrompt = PromptController.FirePrompt
+                    PromptController.FirePrompt = function(self, promptText, ...)
+                        if getgenv().acceptTrade and type(promptText) == "string" and promptText:find("Accept") and promptText:find("from:")   then
+                            
+                            return Promise.new(function(resolve)
+                                task.wait(1.5)
+                                resolve(true)
+                            end)
+                        end
+                        return oldFirePrompt(self, promptText, ...)
+                    end
+  end)
 -- Hook metamethod global
 getgenv().oldAFKScript = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
     local method = getnamecallmethod()
