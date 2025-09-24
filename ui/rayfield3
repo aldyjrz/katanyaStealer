@@ -1250,11 +1250,12 @@ local function Hide(notify: boolean?)
 		MPrompt.Title.TextTransparency = 1
 		MPrompt.Visible = true
 		-- ✅ Setup draggable
-		MPrompt.Title.Active = false
+		MPrompt.Title.Active = true
  
 		MPrompt.Active = true
 		MPrompt.Draggable = true 
-
+        MPrompt.ZIndex = 50
+        MPrompt.Title.ZIndex = 51
 		local stroke = Instance.new("UIStroke")
 		stroke.Parent = MPrompt           -- bisa juga MPrompt.Title jika mau hanya teks
 		stroke.Color = Color3.fromRGB(120, 220, 160) -- warna putih
