@@ -3754,8 +3754,46 @@ hideHotkeyConnection = UserInputService.InputBegan:Connect(function(input, proce
 	end
 end)
 
+local function makeDraggablePrompt(frame)
+    local dragging = false
+    local dragStart, startPos
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    RunService.RenderStepped:Connect(function()
+        if dragging then
+            local delta = UserInputService:GetMouseLocation() - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+	makeDraggablePrompt(MPrompt)
+
 if MPrompt then
-	makeDraggableFrame(MPrompt)
+	makeDraggablePrompt(MPrompt)
 	MPrompt.Interact.MouseButton1Click:Connect(function()
 		if Debounce then return end
 		if Hidden then
