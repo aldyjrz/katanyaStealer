@@ -1249,6 +1249,74 @@ local function setZIndexRecursive(obj, z)
         setZIndexRecursive(child, z + 1)
     end
 end
+task.spawn(function()
+    -- Tunggu Rayfield dan Prompt muncul
+    local Rayfield = game:GetService("CoreGui"):WaitForChild("Rayfield", 5)
+    if not Rayfield then return end
+
+    local MPrompt = Rayfield:WaitForChild("Prompt", 5)
+    if not MPrompt then return end
+
+    -- ✅ Set ZIndex tinggi agar selalu di atas
+    local function setZIndexRecursive(obj, z)
+        if obj:IsA("GuiObject") then obj.ZIndex = z end
+        for _, child in ipairs(obj:GetChildren()) do
+            setZIndexRecursive(child, z + 1)
+        end
+    end
+    setZIndexRecursive(MPrompt, 100)
+
+    -- ✅ Pastikan title aktif untuk input
+    if MPrompt:FindFirstChild("Title") then
+        MPrompt.Title.Active = true
+        MPrompt.Title.Selectable = true
+    end
+
+    -- ✅ Drag hanya jika user klik Title (tulisan SC)
+    if typeof(makeDraggable) == "function" then
+        -- Gunakan Title sebagai handle, frame sebagai objek yang digeser
+        makeDraggable(MPrompt.Title, MPrompt, true, {0, 0})
+    else
+        -- fallback manual jika makeDraggable tidak ada
+        local UserInputService = game:GetService("UserInputService")
+        local dragging, dragInput, dragStart, startPos
+
+        MPrompt.Title.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
+                dragStart = input.Position
+                startPos = MPrompt.Position
+            end
+        end)
+
+        MPrompt.Title.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement then
+                dragInput = input
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if input == dragInput and dragging then
+                local delta = input.Position - dragStart
+                MPrompt.Position = UDim2.new(
+                    startPos.X.Scale,
+                    startPos.X.Offset + delta.X,
+                    startPos.Y.Scale,
+                    startPos.Y.Offset + delta.Y
+                )
+            end
+        end)
+
+        MPrompt.Title.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = false
+            end
+        end)
+    end
+
+    print("[PATCH] MPrompt sekarang bisa di-drag lewat Title (SC)")
+end)
+
 local function Hide(notify: boolean?)
 	if MPrompt then
 		MPrompt.Title.TextColor3 = Color3.fromRGB(255, 255, 255)
