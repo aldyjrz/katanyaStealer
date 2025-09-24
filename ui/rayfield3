@@ -1316,11 +1316,42 @@ task.spawn(function()
 
     print("[PATCH] MPrompt sekarang bisa di-drag lewat Title (SC)")
 end)
+local lastPosition = UDim2.new(0.5, 0, 0, 40) -- posisi default
+local UserInputService = game:GetService("UserInputService")
 
+local function enableDrag(gui)
+    local dragging, dragStart, startPos
+
+    gui.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or
+           input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = gui.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    lastPosition = gui.Position -- simpan posisi terbaru
+                end
+            end)
+        end
+    end)
+
+    gui.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or
+                         input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            gui.Position = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
 local function Hide(notify: boolean?)
 	if MPrompt then
 		MPrompt.Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-		MPrompt.Position = UDim2.new(2, 0, 0, -30)
+        MPrompt.Position = lastPosition -- selalu pakai posisi terakhir
 		MPrompt.Size = UDim2.new(0, 80, 0, 30)
 		MPrompt.BackgroundTransparency = 1
 		MPrompt.Title.TextTransparency = 1
@@ -1339,8 +1370,11 @@ local function Hide(notify: boolean?)
         -- bisa juga "Inner" atau "Outer"
         setZIndexRecursive(MPrompt, 100)
 
-        makeDraggable(MPrompt, MPrompt, true, {0, 0})
-			makeDraggableFrame(MPrompt)
+ 
+        if not MPrompt:GetAttribute("DragSetup") then
+            enableDrag(MPrompt.Title) -- drag lewat Title
+            MPrompt:SetAttribute("DragSetup", true)
+        end
 
 	end
 
@@ -1367,44 +1401,10 @@ local function Hide(notify: boolean?)
 	TweenService:Create(dragBarCosmetic, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
 
 	if useMobilePrompt and MPrompt then
-		TweenService:Create(MPrompt, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 120, 0, 50), Position = UDim2.new(0.5, 0, 0, 40), BackgroundTransparency = 0.3}):Play()
+		TweenService:Create(MPrompt, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 120, 0, 30), Position = UDim2.new(0.5, 0, 0, 40), BackgroundTransparency = 0.3}):Play()
 		TweenService:Create(MPrompt.Title, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {TextTransparency = 0.3}):Play()
 	end
--- Setup Draggable (title bar)
-local dragging = false
-local dragStart
-local startPos
 
-local function updateDrag(input)
-    local delta = input.Position - dragStart
-    MPrompt.Position = UDim2.new(
-        startPos.X.Scale, startPos.X.Offset + delta.X,
-        startPos.Y.Scale, startPos.Y.Offset + delta.Y
-    )
-end
-
-MPrompt.Title.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or
-       input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = MPrompt.Position
-    end
-end)
-
-MPrompt.Title.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or
-                     input.UserInputType == Enum.UserInputType.Touch) then
-        updateDrag(input)
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or
-       input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-    end
-end)
 	for _, TopbarButton in ipairs(Topbar:GetChildren()) do
 		if TopbarButton.ClassName == "ImageButton" then
 			TweenService:Create(TopbarButton, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
