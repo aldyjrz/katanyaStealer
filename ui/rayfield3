@@ -1240,7 +1240,15 @@ local function closeSearch()
 	Main.Search.Input.Text = ''
 	Main.Search.Input.Interactable = false
 end
-
+-- Atur ZIndex agar prompt paling depan
+local function setZIndexRecursive(obj, z)
+    if obj:IsA("GuiObject") then
+        obj.ZIndex = z
+    end
+    for _, child in ipairs(obj:GetChildren()) do
+        setZIndexRecursive(child, z + 1)
+    end
+end
 local function Hide(notify: boolean?)
 	if MPrompt then
 		MPrompt.Title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -1259,7 +1267,10 @@ local function Hide(notify: boolean?)
 		stroke.Color = Color3.fromRGB(120, 220, 160) -- warna putih
 		stroke.Thickness = 2              -- tebal garis
 		stroke.Transparency = 0           -- 0 = tidak transparan
-		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border -- bisa juga "Inner" atau "Outer"
+		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border 
+        -- bisa juga "Inner" atau "Outer"
+        setZIndexRecursive(MPrompt, 100)
+
         makeDraggable(MPrompt, MPrompt, true, {0, 0})
 			makeDraggableFrame(MPrompt)
 
