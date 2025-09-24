@@ -1403,7 +1403,10 @@ local function Hide(notify: boolean?)
 	if useMobilePrompt and MPrompt then
 		TweenService:Create(MPrompt, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Size = UDim2.new(0, 120, 0, 30), Position = UDim2.new(0.5, 0, 0, 60), BackgroundTransparency = 0.3}):Play()
 		TweenService:Create(MPrompt.Title, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {TextTransparency = 0.3}):Play()
-	end
+           enableDrag(MPrompt)
+                      enableDrag(MPrompt.Title)
+
+    end
 
 	for _, TopbarButton in ipairs(Topbar:GetChildren()) do
 		if TopbarButton.ClassName == "ImageButton" then
@@ -3906,6 +3909,42 @@ end
 
 if MPrompt then
 	makeDraggablePrompt(MPrompt)
+    local dragging = false
+    local dragStart, startPos
+
+    MPrompt.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = MPrompt.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    MPrompt.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    RunService.RenderStepped:Connect(function()
+        if dragging then
+            local delta = UserInputService:GetMouseLocation() - dragStart
+            MPrompt.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+
 	MPrompt.Interact.MouseButton1Click:Connect(function()
 		if Debounce then return end
 		if Hidden then
