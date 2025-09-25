@@ -1279,8 +1279,9 @@ local function enableDrag(gui)
             )
         end
     end)
-end
+end 
 local AldyToiBtn = nil
+
 function makeDraggableToi(gui, dragHandle, constrainToScreen, offset)
     local dragging = false
     local dragStart = nil
@@ -1335,10 +1336,19 @@ function makeDraggableToi(gui, dragHandle, constrainToScreen, offset)
         end
     end)
 end
--- Fungsi untuk buat tombol AldyToi (sekali saja)
+
 local function createAldyToiBtn()
     if AldyToiBtn then return AldyToiBtn end
 
+    -- 🔥 Buat ScreenGui supaya pasti tampil
+    local player = game:GetService("Players").LocalPlayer
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "AldyToiGUI"
+    screenGui.IgnoreGuiInset = true
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = player:WaitForChild("PlayerGui")
+
+    -- 🔥 Buat tombol
     AldyToiBtn = Instance.new("TextLabel")
     AldyToiBtn.Name = "AldyToiBtn"
     AldyToiBtn.Text = "AldyToi"
@@ -1349,10 +1359,10 @@ local function createAldyToiBtn()
     AldyToiBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     AldyToiBtn.Font = Enum.Font.GothamBold
     AldyToiBtn.TextSize = 16
-    AldyToiBtn.Visible = false
-    AldyToiBtn.ZIndex = 10
+    AldyToiBtn.ZIndex = 9999
+    AldyToiBtn.Visible = true  -- 👈 langsung true biar kelihatan
 
-    -- Border radius bulat
+    -- Border radius
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 20)
     corner.Parent = AldyToiBtn
@@ -1361,19 +1371,19 @@ local function createAldyToiBtn()
     local stroke = Instance.new("UIStroke")
     stroke.Color = Color3.fromRGB(200, 200, 200)
     stroke.Thickness = 2
-	
     stroke.Transparency = 0.2
     stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     stroke.Parent = AldyToiBtn
-    local player = game:GetService("Players").LocalPlayer
 
-	AldyToiBtn.Parent = player:WaitForChild("PlayerGui")
+    AldyToiBtn.Parent = screenGui
 
     -- Buat draggable
     makeDraggableToi(AldyToiBtn, AldyToiBtn, true, {0, 0})
 
     return AldyToiBtn
 end
+
+
 local function Hide(notify: boolean?)
 	local btn = createAldyToiBtn()
     btn.Visible = true
