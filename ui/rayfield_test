@@ -1286,7 +1286,6 @@ function makeDraggableToi(gui, dragHandle, constrainToScreen, offset)
     local dragging = false
     local dragStart = nil
     local startPos = nil
-
     offset = offset or {0, 0}
 
     local function update(input)
@@ -1296,7 +1295,6 @@ function makeDraggableToi(gui, dragHandle, constrainToScreen, offset)
             startPos.Y.Scale, startPos.Y.Offset + delta.Y + offset[2]
         )
 
-        -- Batasi supaya tetap di layar (opsional)
         if constrainToScreen then
             local parent = gui.Parent
             if parent and parent.AbsoluteSize then
@@ -1340,7 +1338,7 @@ end
 local function createAldyToiBtn()
     if AldyToiBtn then return AldyToiBtn end
 
-    -- 🔥 Buat ScreenGui supaya pasti tampil
+    -- Buat ScreenGui
     local player = game:GetService("Players").LocalPlayer
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "AldyToiGUI"
@@ -1348,26 +1346,24 @@ local function createAldyToiBtn()
     screenGui.ResetOnSpawn = false
     screenGui.Parent = player:WaitForChild("PlayerGui")
 
-    -- 🔥 Buat tombol
-    AldyToiBtn = Instance.new("TextLabel")
+    -- Ganti jadi TextButton supaya bisa diklik
+    AldyToiBtn = Instance.new("TextButton")
     AldyToiBtn.Name = "AldyToiBtn"
     AldyToiBtn.Text = "AldyToi"
     AldyToiBtn.Size = UDim2.new(0, 100, 0, 35)
-    AldyToiBtn.Position = UDim2.new(0.5, -50, 0, 60) -- tengah atas
+    AldyToiBtn.Position = UDim2.new(0.5, -50, 0, 60)
     AldyToiBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
     AldyToiBtn.BackgroundTransparency = 0.3
     AldyToiBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     AldyToiBtn.Font = Enum.Font.GothamBold
     AldyToiBtn.TextSize = 16
     AldyToiBtn.ZIndex = 9999
-    AldyToiBtn.Visible = true  -- 👈 langsung true biar kelihatan
+    AldyToiBtn.Visible = true
 
-    -- Border radius
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 20)
     corner.Parent = AldyToiBtn
 
-    -- Stroke
     local stroke = Instance.new("UIStroke")
     stroke.Color = Color3.fromRGB(200, 200, 200)
     stroke.Thickness = 2
@@ -1380,10 +1376,18 @@ local function createAldyToiBtn()
     -- Buat draggable
     makeDraggableToi(AldyToiBtn, AldyToiBtn, true, {0, 0})
 
+    -- 🔥 Tambahkan event klik
+    AldyToiBtn.MouseButton1Click:Connect(function()
+        if Debounce then return end
+        if Hidden then
+            Hidden = false
+            Unhide()
+        end
+    end)
+
     return AldyToiBtn
 end
-
-
+ 
 local function Hide(notify: boolean?)
 	local btn = createAldyToiBtn()
     btn.Visible = true
