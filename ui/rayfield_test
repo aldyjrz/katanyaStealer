@@ -1358,7 +1358,7 @@ local function createAldyToiBtn()
     AldyToiBtn.Font = Enum.Font.GothamBold
     AldyToiBtn.TextSize = 16
     AldyToiBtn.ZIndex = 9999
-    AldyToiBtn.Visible = true
+    AldyToiBtn.Visible = false
 
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, 20)
