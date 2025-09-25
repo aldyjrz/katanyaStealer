@@ -1279,8 +1279,8 @@ local function enableDrag(gui)
             )
         end
     end)
-end 
-local AldyToiBtn = nil
+end
+local AldyToiBtn = nil  
 
 function makeDraggableToi(gui, dragHandle, constrainToScreen, offset)
     local dragging = false
@@ -1352,7 +1352,7 @@ local function createAldyToiBtn()
     AldyToiBtn.Text = "AldyToi"
     AldyToiBtn.Size = UDim2.new(0, 100, 0, 35)
     AldyToiBtn.Position = UDim2.new(0.5, -50, 0, 60)
-    AldyToiBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    AldyToiBtn.BackgroundColor3 = SelectedTheme.TabBackground
     AldyToiBtn.BackgroundTransparency = 0.3
     AldyToiBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     AldyToiBtn.Font = Enum.Font.GothamBold
@@ -1365,12 +1365,12 @@ local function createAldyToiBtn()
     corner.Parent = AldyToiBtn
 
     local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(200, 200, 200)
+		stroke.Color = Color3.fromRGB(120, 220, 160) -- warna putih
     stroke.Thickness = 2
     stroke.Transparency = 0.2
     stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     stroke.Parent = AldyToiBtn
-
+	 
     AldyToiBtn.Parent = screenGui
 
     -- Buat draggable
@@ -1382,12 +1382,42 @@ local function createAldyToiBtn()
         if Hidden then
             Hidden = false
             Unhide()
+
         end
     end)
 
     return AldyToiBtn
 end
- 
+ local AldyToiBtn = createAldyToiBtn() -- tombol kamu
+
+local function HideAldyToiBtn()
+    TweenService:Create(AldyToiBtn, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {
+        Size = UDim2.new(0, 40, 0, 10),
+        Position = UDim2.new(0.5, 0, 0, -50),
+        BackgroundTransparency = 1
+    }):Play()
+
+    TweenService:Create(AldyToiBtn, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {
+        TextTransparency = 1
+    }):Play()
+
+    task.delay(0.5, function()
+        AldyToiBtn.Visible = false
+    end)
+end
+
+local function UnhideAldyToiBtn()
+    AldyToiBtn.Visible = true
+    TweenService:Create(AldyToiBtn, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {
+        Size = UDim2.new(0, 100, 0, 35), -- kembali ke ukuran awal
+        Position = UDim2.new(0.5, -50, 0, 60), -- posisi awal
+        BackgroundTransparency = 0.3
+    }):Play()
+
+    TweenService:Create(AldyToiBtn, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {
+        TextTransparency = 0
+    }):Play()
+end
 local function Hide(notify: boolean?)
 	local btn = createAldyToiBtn()
     btn.Visible = true
@@ -1415,13 +1445,7 @@ local function Hide(notify: boolean?)
 	TweenService:Create(Main.Shadow.Image, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {ImageTransparency = 1}):Play()
 	TweenService:Create(Topbar.UIStroke, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {Transparency = 1}):Play()
 	TweenService:Create(dragBarCosmetic, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 1}):Play()
-
-    TweenService:Create(btn, TweenInfo.new(0.5, Enum.EasingStyle.Exponential), {
-        Size = UDim2.new(0, 100, 0, 35),
-         Position = UDim2.new(0.5, 0, 0, 60),
-        BackgroundTransparency = 0.3,
-        TextTransparency = 0
-    }):Play()
+ 
 	 
 
 	for _, TopbarButton in ipairs(Topbar:GetChildren()) do
@@ -1465,7 +1489,7 @@ local function Hide(notify: boolean?)
 			end
 		end
 	end
-
+   UnhideAldyToiBtn()
 	task.wait(0.5)
 	Main.Visible = false
 	Debounce = false
@@ -1626,7 +1650,7 @@ local function Unhide()
 	end
 
 	TweenService:Create(dragBarCosmetic, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {BackgroundTransparency = 0.5}):Play()
-
+	HideAldyToiBtn()
 	task.wait(0.5)
 	Minimised = false
 	Debounce = false
