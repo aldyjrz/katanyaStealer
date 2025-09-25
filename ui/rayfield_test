@@ -1376,16 +1376,7 @@ local function createAldyToiBtn()
     -- Buat draggable
     makeDraggableToi(AldyToiBtn, AldyToiBtn, true, {0, 0})
 
-    -- 🔥 Tambahkan event klik
-    AldyToiBtn.MouseButton1Click:Connect(function()
-        if Debounce then return end
-        if Hidden then
-            Hidden = false
-            Unhide()
-
-        end
-    end)
-
+   
     return AldyToiBtn
 end
  local AldyToiBtn = createAldyToiBtn() -- tombol kamu
@@ -1732,7 +1723,15 @@ local function saveSettings() -- Save settings to config file
 		end
 	end
 end
-
+if AldyToiBtn then
+ 	AldyToiBtn.Interact.MouseButton1Click:Connect(function()
+		if Debounce then return end
+		if Hidden then
+			Hidden = false
+			Unhide()
+		end
+	end)
+end
 local function updateSetting(category: string, setting: string, value: any)
 	if not settingsInitialized then
 		return
