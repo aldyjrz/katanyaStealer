@@ -1724,13 +1724,15 @@ local function saveSettings() -- Save settings to config file
 	end
 end
 if AldyToiBtn then
- 	AldyToiBtn.Interact.MouseButton1Click:Connect(function()
-		if Debounce then return end
-		if Hidden then
-			Hidden = false
-			Unhide()
-		end
-	end)
+	if AldyToiBtn.InputBegan:Connect(function(input)
+    	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			if Debounce then return end
+			if Hidden then
+				Hidden = false
+				Unhide()
+			end
+		end)
+	end
 end
 local function updateSetting(category: string, setting: string, value: any)
 	if not settingsInitialized then
