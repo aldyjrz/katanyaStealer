@@ -1281,7 +1281,60 @@ local function enableDrag(gui)
     end)
 end
 local AldyToiBtn = nil
+function makeDraggableToi(gui, dragHandle, constrainToScreen, offset)
+    local dragging = false
+    local dragStart = nil
+    local startPos = nil
 
+    offset = offset or {0, 0}
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        local newPos = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X + offset[1],
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y + offset[2]
+        )
+
+        -- Batasi supaya tetap di layar (opsional)
+        if constrainToScreen then
+            local parent = gui.Parent
+            if parent and parent.AbsoluteSize then
+                local guiSize = gui.AbsoluteSize
+                local maxX = parent.AbsoluteSize.X - guiSize.X
+                local maxY = parent.AbsoluteSize.Y - guiSize.Y
+                newPos = UDim2.new(
+                    0, math.clamp(newPos.X.Offset, 0, maxX),
+                    0, math.clamp(newPos.Y.Offset, 0, maxY)
+                )
+            end
+        end
+
+        gui.Position = newPos
+    end
+
+    dragHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or
+           input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = gui.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    dragHandle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or
+           input.UserInputType == Enum.UserInputType.Touch then
+            if dragging then
+                update(input)
+            end
+        end
+    end)
+end
 -- Fungsi untuk buat tombol AldyToi (sekali saja)
 local function createAldyToiBtn()
     if AldyToiBtn then return AldyToiBtn end
@@ -1297,6 +1350,7 @@ local function createAldyToiBtn()
     AldyToiBtn.Font = Enum.Font.GothamBold
     AldyToiBtn.TextSize = 16
     AldyToiBtn.Visible = false
+    AldyToiBtn.ZIndex = 10
 
     -- Border radius bulat
     local corner = Instance.new("UICorner")
@@ -1307,14 +1361,16 @@ local function createAldyToiBtn()
     local stroke = Instance.new("UIStroke")
     stroke.Color = Color3.fromRGB(200, 200, 200)
     stroke.Thickness = 2
+	
     stroke.Transparency = 0.2
     stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     stroke.Parent = AldyToiBtn
+    local player = game:GetService("Players").LocalPlayer
 
-    AldyToiBtn.Parent = game:GetService("CoreGui")
+	AldyToiBtn.Parent = player:WaitForChild("PlayerGui")
 
     -- Buat draggable
-    makeDraggable(AldyToiBtn, AldyToiBtn, true, {0, 0})
+    makeDraggableToi(AldyToiBtn, AldyToiBtn, true, {0, 0})
 
     return AldyToiBtn
 end
