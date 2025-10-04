@@ -1846,7 +1846,7 @@ end;
 					if AldyToim == 245 then
 						AldyToiq5(AldyTois5, 1);
 					else
-						AldyToiq5(AldyTois5, 1);
+						AldyToiq5(AldyToio5, 1);
 					end;
 				end;
 				if (getgenv())[AldyToikT(12430)][AldyToikT(12348)] then
