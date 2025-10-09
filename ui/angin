@@ -9340,9 +9340,7 @@ Acrylic=aq.Acrylic or false,
 NewElements=aq.NewElements or false,
 IgnoreAlerts=aq.IgnoreAlerts or false,
 HidePanelBackground=aq.HidePanelBackground or false,
-AutoScale=aq.AutoScale,
-OpenButton=aq.OpenButton,
-
+AutoScale=aq.AutoScale, 
 Position=UDim2.new(0.5,0,0.5,0),
 IconSize=aq.IconSize or 22,
 UICorner=16,
@@ -10236,10 +10234,7 @@ h.Size=UDim2.new(0,ar.IconSize,0,ar.IconSize)
 ar.OpenButtonMain:SetIcon(ar.Icon)
 
 
-
-ar.OpenButtonMain:Destroy()
-
-
+ 
 
 
 
@@ -10498,7 +10493,7 @@ task.wait(0.4)
 ar.UIElements.Main.Visible=false
 
 if ar.OpenButtonMain and not ar.Destroyed then
-ar.OpenButtonMain:Visible(true)
+ar.OpenButtonMain:Visible(false)
 end
 end)
 
