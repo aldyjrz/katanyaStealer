@@ -10410,6 +10410,7 @@ if ar.OpenButtonMain then
 ar.OpenButtonMain:Visible(false)
 end
 
+ar.OpenButtonMain:Visible(false)
 
 ak(ay,0.25,{ImageTransparency=.7},Enum.EasingStyle.Quint,Enum.EasingDirection.Out):Play()
 if UIStroke then
