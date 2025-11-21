@@ -292,8 +292,7 @@ ll.SortOrder = Enum.SortOrder.LayoutOrder
 
 --toggle
 
-local function initToggle()
-     local ToggleTemplate = Instance.new("Frame")
+      local ToggleTemplate = Instance.new("Frame")
     ToggleTemplate.Name = "Toggle"
     ToggleTemplate.BackgroundColor3 = Color3.fromRGB(255,255,255)
     ToggleTemplate.BackgroundTransparency = 0.935
@@ -363,8 +362,7 @@ local function initToggle()
     UICorner23.CornerRadius = UDim.new(0,15)
 
     ToggleTemplate.Visible = false
-    return ToggleTemplate
-end
+   
 
 local function isMobileDevice()
     return UserInputService.TouchEnabled
