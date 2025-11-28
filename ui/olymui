@@ -1,0 +1,659 @@
+-- OllyUI.lua
+-- Sidebar multi-section UI (Toggle, Button, Input, Dropdown, MultiDropdown)
+-- Features: Save/Load config, Key system modal, Drag window, Minimize, Dark/Light theme, Refreshable dropdowns
+-- Author: Generated for user
+-- Usage: local UI = require(path_to_OllyUI) ; local win = UI:Window("Olly Hub", {...})
+
+local OllyUI = {}
+OllyUI.__version = "1.0.0"
+
+-- services
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- Helpers to detect executor environment functions (writefile/readfile/isfile/makefolder)
+local hasWrite = type(writefile) == "function"
+local hasRead = type(readfile) == "function"
+local hasIsFile = type(isfile) == "function"
+local hasMakeFolder = type(makefolder) == "function"
+local safeWrite, safeRead, safeIsFile, safeMakeFolder
+if hasWrite then safeWrite = writefile end
+if hasRead then safeRead = readfile end
+if hasIsFile then safeIsFile = isfile end
+if hasMakeFolder then safeMakeFolder = makefolder end
+
+-- Basic Instance maker
+local function Make(class, props)
+    local inst = Instance.new(class)
+    if props then
+        for k, v in pairs(props) do
+            -- protect readonly
+            pcall(function() inst[k] = v end)
+        end
+    end
+    return inst
+end
+
+-- Default theme (dark)
+local THEMES = {
+    Dark = {
+        Main = Color3.fromRGB(20,20,20),
+        Sidebar = Color3.fromRGB(16,16,16),
+        Content = Color3.fromRGB(25,25,25),
+        Accent = Color3.fromRGB(35,35,35),
+        Text = Color3.fromRGB(235,235,235),
+        Button = Color3.fromRGB(50,50,50),
+        ToggleOn = Color3.fromRGB(60,140,70),
+        ToggleOff = Color3.fromRGB(90,40,40),
+        Highlight = Color3.fromRGB(80,80,80)
+    },
+    Light = {
+        Main = Color3.fromRGB(240,240,240),
+        Sidebar = Color3.fromRGB(220,220,220),
+        Content = Color3.fromRGB(250,250,250),
+        Accent = Color3.fromRGB(230,230,230),
+        Text = Color3.fromRGB(20,20,20),
+        Button = Color3.fromRGB(200,200,200),
+        ToggleOn = Color3.fromRGB(60,140,70),
+        ToggleOff = Color3.fromRGB(160,60,60),
+        Highlight = Color3.fromRGB(200,200,200)
+    }
+}
+
+-- Config helpers
+local function safeJsonEncode(tbl)
+    return HttpService:JSONEncode(tbl or {})
+end
+local function safeJsonDecode(str)
+    local ok, v = pcall(function() return HttpService:JSONDecode(str) end)
+    if ok then return v end
+    return {}
+end
+
+-- Window builder
+function OllyUI:Window(title, opts)
+    opts = opts or {}
+    title = title or "Olly Hub"
+    local keyEnabled = opts.KeySystem == true
+    local keyRequired = tostring(opts.Key or "")
+    local configEnabled = opts.SaveConfig == true
+    local configFolder = tostring(opts.ConfigFolder or "OllyUIConfig")
+    local configFile = configFolder .. "/" .. tostring(game.PlaceId) .. ".json"
+
+    -- ensure folder exists if file api present
+    if configEnabled and safeMakeFolder and safeIsFile ~= nil then
+        if not safeIsFile and safeMakeFolder then
+            pcall(function() safeMakeFolder(configFolder) end)
+        end
+        if not safeIsFile and not safeMakeFolder then
+            -- environment without folder api (rare). we'll still try writefile directly.
+        end
+    end
+
+    local config = {}
+    local function loadConfig()
+        if not configEnabled then return end
+        if safeIsFile and safeIsFile(configFile) and safeRead then
+            local ok, dat = pcall(safeRead, configFile)
+            if ok and dat then
+                local dec = safeJsonDecode(dat)
+                if type(dec) == "table" then
+                    for k,v in pairs(dec) do config[k] = v end
+                end
+            end
+        end
+    end
+    local function saveConfig()
+        if not configEnabled then return end
+        if safeWrite then
+            local encoded = safeJsonEncode(config)
+            pcall(function()
+                if safeMakeFolder then pcall(safeMakeFolder, configFolder) end
+                safeWrite(configFile, encoded)
+            end)
+        end
+    end
+
+    -- internal UI state
+    local ScreenGui = Make("ScreenGui", { Name = title .. "_ScreenGui", ResetOnSpawn = false })
+    -- parent to CoreGui if possible
+    pcall(function() ScreenGui.Parent = game:GetService("CoreGui") end)
+    if not ScreenGui.Parent then ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+
+    -- Key system modal
+    if keyEnabled then
+        local modal = Make("Frame", {
+            Parent = ScreenGui,
+            Size = UDim2.new(0,340,0,160),
+            Position = UDim2.new(0.5, -170, 0.5, -80),
+            BackgroundColor3 = THEMES.Dark.Main,
+            BorderSizePixel = 0
+        })
+        local titleLbl = Make("TextLabel", {
+            Parent = modal,
+            Size = UDim2.new(1,0,0,28),
+            Position = UDim2.new(0,0,0,6),
+            BackgroundTransparency = 1,
+            Text = title .. " - Enter Key",
+            TextColor3 = THEMES.Dark.Text,
+            TextScaled = false,
+            Font = Enum.Font.SourceSansBold,
+            TextSize = 18
+        })
+        local inputBox = Make("TextBox", {
+            Parent = modal,
+            Size = UDim2.new(1,-24,0,36),
+            Position = UDim2.new(0,12,0,48),
+            BackgroundColor3 = THEMES.Dark.Accent,
+            TextColor3 = THEMES.Dark.Text,
+            Text = "",
+            PlaceholderText = "Enter Key",
+            ClearTextOnFocus = false
+        })
+        local submitBtn = Make("TextButton", {
+            Parent = modal,
+            Size = UDim2.new(1,-24,0,34),
+            Position = UDim2.new(0,12,0,96),
+            BackgroundColor3 = THEMES.Dark.Button,
+            TextColor3 = THEMES.Dark.Text,
+            Text = "Submit"
+        })
+        submitBtn.MouseButton1Click:Connect(function()
+            local entered = tostring(inputBox.Text or "")
+            if entered == keyRequired then
+                pcall(function() modal:Destroy() end)
+            else
+                inputBox.Text = ""
+                inputBox.PlaceholderText = "WRONG KEY!"
+            end
+        end)
+        -- block until modal destroyed
+        repeat RunService.Heartbeat:Wait() until not modal.Parent
+    end
+
+    -- load config if available
+    if configEnabled then
+        loadConfig()
+    end
+
+    -- Main Window frame
+    local Main = Make("Frame", {
+        Parent = ScreenGui,
+        Size = UDim2.new(0,760,0,480),
+        Position = UDim2.new(0.5,-380,0.5,-240),
+        BackgroundColor3 = THEMES.Dark.Main,
+        BorderSizePixel = 0
+    })
+
+    -- Topbar
+    local Topbar = Make("Frame", {
+        Parent = Main,
+        Size = UDim2.new(1,0,0,34),
+        Position = UDim2.new(0,0,0,0),
+        BackgroundColor3 = THEMES.Dark.Accent,
+        BorderSizePixel = 0
+    })
+    local TitleLabel = Make("TextLabel", {
+        Parent = Topbar,
+        Size = UDim2.new(1,0,1,0),
+        BackgroundTransparency = 1,
+        Text = title,
+        TextColor3 = THEMES.Dark.Text,
+        Font = Enum.Font.SourceSansBold,
+        TextSize = 18,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextTransparency = 0
+    })
+    TitleLabel.Position = UDim2.new(0,12,0,0)
+
+    -- Minimize button
+    local MinBtn = Make("TextButton", {
+        Parent = Topbar,
+        Size = UDim2.new(0,28,0,28),
+        Position = UDim2.new(1,-36,0,3),
+        Text = "-",
+        BackgroundColor3 = THEMES.Dark.Button,
+        TextColor3 = THEMES.Dark.Text
+    })
+
+    -- Sidebar
+    local Sidebar = Make("Frame", {
+        Parent = Main,
+        Size = UDim2.new(0,160,1, -34),
+        Position = UDim2.new(0,0,0,34),
+        BackgroundColor3 = THEMES.Dark.Sidebar,
+        BorderSizePixel = 0
+    })
+
+    -- Content area
+    local Content = Make("Frame", {
+        Parent = Main,
+        Size = UDim2.new(1,-160,1,-34),
+        Position = UDim2.new(0,160,0,34),
+        BackgroundColor3 = THEMES.Dark.Content,
+        BorderSizePixel = 0
+    })
+
+    -- Small helper to apply theme to descendants (text colors)
+    local function applyTheme(themeName)
+        local theme = THEMES[themeName] or THEMES.Dark
+        Main.BackgroundColor3 = theme.Main
+        Topbar.BackgroundColor3 = theme.Accent
+        Sidebar.BackgroundColor3 = theme.Sidebar
+        Content.BackgroundColor3 = theme.Content
+        TitleLabel.TextColor3 = theme.Text
+        -- update children text color where applicable
+        for _,v in pairs(Main:GetDescendants()) do
+            if v:IsA("TextLabel") or v:IsA("TextButton") or v:IsA("TextBox") then
+                pcall(function() v.TextColor3 = theme.Text end)
+            end
+        end
+    end
+
+    -- current theme from config or default
+    config._theme = config._theme or "Dark"
+    applyTheme(config._theme)
+
+    -- Draggable Main window via Topbar
+    do
+        local dragging = false
+        local dragStart = Vector2.new(0,0)
+        local startPos = UDim2.new(0,0,0,0)
+        Topbar.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
+                dragStart = input.Position
+                startPos = Main.Position
+            end
+        end)
+        Topbar.InputChanged:Connect(function(input)
+            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                local delta = input.Position - dragStart
+                Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
+        end)
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+        end)
+    end
+
+    -- Minimize toggle
+    local minimized = false
+    MinBtn.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        Content.Visible = not minimized
+        Sidebar.Visible = not minimized
+        MinBtn.Text = minimized and "+" or "-"
+        -- save state
+        config._minimized = minimized
+        saveConfig()
+    end)
+    -- restore minimized state
+    if config._minimized then
+        minimized = config._minimized
+        Content.Visible = not minimized
+        Sidebar.Visible = not minimized
+        MinBtn.Text = minimized and "+" or "-"
+    end
+
+    -- API container
+    local WindowAPI = {}
+    WindowAPI._screen = ScreenGui
+    WindowAPI._main = Main
+    WindowAPI._sidebar = Sidebar
+    WindowAPI._content = Content
+    WindowAPI._tabs = {}
+    WindowAPI._config = config
+    WindowAPI._saveConfig = saveConfig
+    WindowAPI._applyTheme = applyTheme
+
+    -- utility: create a Section frame inside content. Each tab is a single frame; sections sit inside that frame vertically.
+    function WindowAPI:Tab(tabName)
+        local btn = Make("TextButton", {
+            Parent = Sidebar,
+            Size = UDim2.new(1,0,0,36),
+            BackgroundColor3 = THEMES.Dark.Sidebar,
+            Text = tabName,
+            TextColor3 = THEMES.Dark.Text,
+            Font = Enum.Font.SourceSans,
+            TextSize = 16
+        })
+
+        -- find content frame for this tab
+        local tabFrame = Make("ScrollingFrame", {
+            Parent = Content,
+            Size = UDim2.new(1,0,1,0),
+            BackgroundTransparency = 1,
+            CanvasSize = UDim2.new(0,0,0,0),
+            ScrollBarThickness = 6,
+            Visible = false
+        })
+        local uiList = Make("UIListLayout", { Parent = tabFrame, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0,8) })
+        uiList.Padding = UDim.new(0,8)
+        tabFrame:GetPropertyChangedSignal("CanvasSize"):Connect(function() end)
+
+        -- when clicked, show only this tab
+        btn.MouseButton1Click:Connect(function()
+            for _, child in pairs(Content:GetChildren()) do
+                if child:IsA("ScrollingFrame") then child.Visible = false end
+            end
+            tabFrame.Visible = true
+        end)
+
+        -- select first tab if none visible
+        local anyVisible = false
+        for _,child in pairs(Content:GetChildren()) do
+            if child:IsA("ScrollingFrame") and child.Visible then anyVisible = true break end
+        end
+        if not anyVisible then tabFrame.Visible = true end
+
+        -- section API factory (each element appended vertically)
+        local ElementAPI = {}
+        ElementAPI._parentFrame = tabFrame
+        ElementAPI._yOffset = 8
+
+        -- helper colors
+        local function themeColor(k)
+            local t = THEMES[config._theme or "Dark"]
+            return t[k] or Color3.fromRGB(60,60,60)
+        end
+
+        -- Toggle
+        function ElementAPI:Toggle(data)
+            data = data or {}
+            local title = tostring(data.Title or "Toggle")
+            local default = data.Default == true
+
+            if config[title] == nil then config[title] = default end
+
+            local container = Make("Frame", {
+                Parent = tabFrame,
+                Size = UDim2.new(1,-16,0,36),
+                BackgroundColor3 = Color3.fromRGB(0,0,0,0),
+            })
+            local label = Make("TextLabel", {
+                Parent = container,
+                Size = UDim2.new(1,-80,1,0),
+                Position = UDim2.new(0,12,0,0),
+                BackgroundTransparency = 1,
+                Text = title,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Font = Enum.Font.SourceSans,
+                TextSize = 16,
+                TextColor3 = themeColor("Text")
+            })
+            local btn = Make("TextButton", {
+                Parent = container,
+                Size = UDim2.new(0,64,0,28),
+                Position = UDim2.new(1,-76,0,4),
+                BackgroundColor3 = config[title] and themeColor("ToggleOn") or themeColor("ToggleOff"),
+                Text = config[title] and "ON" or "OFF",
+                TextColor3 = themeColor("Text"),
+                Font = Enum.Font.SourceSansBold,
+                TextSize = 14
+            })
+            btn.MouseButton1Click:Connect(function()
+                config[title] = not config[title]
+                btn.BackgroundColor3 = config[title] and themeColor("ToggleOn") or themeColor("ToggleOff")
+                btn.Text = config[title] and "ON" or "OFF"
+                pcall(data.Callback, config[title])
+                saveConfig()
+            end)
+            -- initial callback (if requested)
+            if data.InitCallback then pcall(data.InitCallback, config[title]) end
+            return {Set = function(v) config[title] = v; btn.BackgroundColor3 = v and themeColor("ToggleOn") or themeColor("ToggleOff"); btn.Text = v and "ON" or "OFF"; saveConfig(); if data.Callback then pcall(data.Callback, v) end end}
+        end
+
+        -- Button
+        function ElementAPI:Button(data)
+            data = data or {}
+            local title = tostring(data.Title or "Button")
+            local btn = Make("TextButton", {
+                Parent = tabFrame,
+                Size = UDim2.new(1,-16,0,34),
+                BackgroundColor3 = themeColor("Button"),
+                Text = title,
+                TextColor3 = themeColor("Text"),
+                Font = Enum.Font.SourceSansBold,
+                TextSize = 16
+            })
+            btn.MouseButton1Click:Connect(function()
+                pcall(data.Callback)
+            end)
+            return {Press = function() pcall(data.Callback) end}
+        end
+
+        -- Input
+        function ElementAPI:Input(data)
+            data = data or {}
+            local title = tostring(data.Title or "Input")
+            local placeholder = tostring(data.Placeholder or "")
+            if config[title] == nil then config[title] = tostring(data.Value or "") end
+
+            local container = Make("Frame", {
+                Parent = tabFrame,
+                Size = UDim2.new(1,-16,0,36),
+                BackgroundColor3 = Color3.fromRGB(0,0,0,0)
+            })
+            local label = Make("TextLabel", {
+                Parent = container,
+                Size = UDim2.new(0.38,0,1,0),
+                Position = UDim2.new(0,8,0,0),
+                BackgroundTransparency = 1,
+                Text = title,
+                TextColor3 = themeColor("Text"),
+                Font = Enum.Font.SourceSans,
+                TextSize = 15,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+            local box = Make("TextBox", {
+                Parent = container,
+                Size = UDim2.new(0.58,0,0.9,0),
+                Position = UDim2.new(0.42,0,0.05,0),
+                BackgroundColor3 = themeColor("Accent"),
+                TextColor3 = themeColor("Text"),
+                Text = tostring(config[title] or ""),
+                PlaceholderText = placeholder,
+                ClearTextOnFocus = false,
+                Font = Enum.Font.SourceSans,
+                TextSize = 14
+            })
+            box.FocusLost:Connect(function(enter)
+                config[title] = tostring(box.Text or "")
+                pcall(data.Callback, box.Text)
+                saveConfig()
+            end)
+            return {Set = function(v) config[title] = tostring(v); box.Text = tostring(v); saveConfig(); if data.Callback then pcall(data.Callback, v) end end, Get = function() return config[title] end}
+        end
+
+        -- Dropdown (single select) with refresh capability
+        function ElementAPI:Dropdown(data)
+            data = data or {}
+            local title = tostring(data.Title or "Dropdown")
+            local values = data.Values or {}
+            if type(values) ~= "table" then values = {} end
+            if config[title] == nil then config[title] = tostring(values[1] or "") end
+
+            local container = Make("Frame", {
+                Parent = tabFrame,
+                Size = UDim2.new(1,-16,0,36),
+                BackgroundColor3 = Color3.fromRGB(0,0,0,0)
+            })
+            local label = Make("TextLabel", {
+                Parent = container,
+                Size = UDim2.new(0.45,0,1,0),
+                Position = UDim2.new(0,8,0,0),
+                BackgroundTransparency = 1,
+                Text = title,
+                TextColor3 = themeColor("Text"),
+                Font = Enum.Font.SourceSans,
+                TextSize = 15,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+            local btn = Make("TextButton", {
+                Parent = container,
+                Size = UDim2.new(0.5,0,0.86,0),
+                Position = UDim2.new(0.5,0,0.07,0),
+                BackgroundColor3 = themeColor("Highlight"),
+                Text = tostring(config[title] or values[1] or ""),
+                TextColor3 = themeColor("Text"),
+                Font = Enum.Font.SourceSans,
+                TextSize = 14
+            })
+
+            local function setValues(newValues)
+                data.Values = newValues or {}
+                if not data.Values[1] then
+                    config[title] = ""
+                    btn.Text = ""
+                else
+                    if config[title] == "" or not table.find(data.Values, config[title]) then
+                        config[title] = tostring(data.Values[1])
+                        btn.Text = tostring(data.Values[1])
+                    end
+                end
+                saveConfig()
+            end
+            setValues(values)
+
+            btn.MouseButton1Click:Connect(function()
+                local vals = data.Values or {}
+                if #vals == 0 then return end
+                local idx = table.find(vals, btn.Text) or 1
+                local nextIdx = (idx % #vals) + 1
+                btn.Text = vals[nextIdx]
+                config[title] = btn.Text
+                pcall(data.Callback, btn.Text)
+                saveConfig()
+            end)
+
+            -- provide API to refresh values programmatically
+            local api = {
+                SetValues = setValues,
+                GetValue = function() return config[title] end,
+                SetValue = function(v) if table.find(data.Values, v) then config[title] = v; btn.Text = v; saveConfig(); pcall(data.Callback,v) end end
+            }
+            return api
+        end
+
+        -- Multi-dropdown (WindUI-like): returns a map {option=true/false}
+        function ElementAPI:MultiDropdown(data)
+            data = data or {}
+            local title = tostring(data.Title or "MultiSelect")
+            local values = data.Values or {}
+            if type(values) ~= "table" then values = {} end
+            config[title] = config[title] or {}
+
+            local container = Make("Frame", {
+                Parent = tabFrame,
+                Size = UDim2.new(1,-16,0,36),
+                BackgroundColor3 = Color3.fromRGB(0,0,0,0)
+            })
+            local label = Make("TextLabel", {
+                Parent = container,
+                Size = UDim2.new(0.6,0,1,0),
+                Position = UDim2.new(0,8,0,0),
+                BackgroundTransparency = 1,
+                Text = title,
+                TextColor3 = themeColor("Text"),
+                Font = Enum.Font.SourceSans,
+                TextSize = 15,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+            local toggleBtn = Make("TextButton", {
+                Parent = container,
+                Size = UDim2.new(0.36,0,0.86,0),
+                Position = UDim2.new(0.64,0,0.07,0),
+                BackgroundColor3 = themeColor("Highlight"),
+                Text = "Select",
+                TextColor3 = themeColor("Text"),
+                Font = Enum.Font.SourceSans,
+                TextSize = 14
+            })
+
+            -- Popup frame (list)
+            local listFrame = Make("Frame", {
+                Parent = tabFrame,
+                Size = UDim2.new(0.36,0,0,0),
+                Position = UDim2.new(0.64,0,0,0),
+                BackgroundColor3 = themeColor("Accent"),
+                Visible = false,
+                ClipsDescendants = true
+            })
+
+            local function refreshList()
+                for _,c in pairs(listFrame:GetChildren()) do
+                    if c:IsA("TextButton") or c:IsA("TextLabel") then c:Destroy() end
+                end
+                local y = 0
+                for i,opt in ipairs(data.Values) do
+                    local selected = config[title][opt] == true
+                    local item = Make("TextButton", {
+                        Parent = listFrame,
+                        Size = UDim2.new(1,0,0,28),
+                        Position = UDim2.new(0,0,0,y),
+                        BackgroundColor3 = themeColor("Content"),
+                        Text = (selected and "✔ " or "") .. opt,
+                        TextColor3 = themeColor("Text"),
+                        Font = Enum.Font.SourceSans,
+                        TextSize = 14
+                    })
+                    item.MouseButton1Click:Connect(function()
+                        config[title][opt] = not config[title][opt]
+                        pcall(data.Callback, config[title])
+                        saveConfig()
+                        refreshList()
+                    end)
+                    y = y + 28
+                end
+                listFrame.Size = UDim2.new(0, listFrame.Size.X.Offset, 0, y)
+            end
+            refreshList()
+
+            toggleBtn.MouseButton1Click:Connect(function()
+                listFrame.Visible = not listFrame.Visible
+            end)
+
+            -- public API
+            local api = {
+                GetSelected = function() return config[title] end,
+                SetSelected = function(tbl)
+                    config[title] = tbl or {}
+                    saveConfig()
+                    refreshList()
+                end,
+                RefreshValues = function(newValues)
+                    data.Values = newValues or {}
+                    refreshList()
+                end
+            }
+            return api
+        end
+
+        -- expose raw parent frame (for adding custom content if needed)
+        function ElementAPI:GetFrame() return tabFrame end
+
+        -- finished creating elements in this tab
+        return ElementAPI
+    end
+
+    -- theme toggle helper on window
+    function WindowAPI:ToggleTheme()
+        if config._theme == "Dark" then config._theme = "Light" else config._theme = "Dark" end
+        applyTheme(config._theme)
+        saveConfig()
+    end
+
+    -- convenience: expose save/load
+    function WindowAPI:Save() saveConfig() end
+    function WindowAPI:Load() loadConfig(); applyTheme(config._theme or "Dark") end
+
+    -- return window API to caller
+    return WindowAPI
+end
+
+return OllyUI
