@@ -283,15 +283,81 @@ function OllyUI:Window(title, opts)
 
     -- Minimize toggle
     local minimized = false
-    MinBtn.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        Content.Visible = not minimized
-        Sidebar.Visible = not minimized
-        MinBtn.Text = minimized and "+" or "-"
-        -- save state
-        config._minimized = minimized
-        saveConfig()
-    end)
+   local ScreenGui = self._screen
+local floatBtnGui -- ScreenGui khusus tombol
+
+MinBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    Content.Visible = not minimized
+    Sidebar.Visible = not minimized
+    MinBtn.Text = minimized and "+" or "-"
+
+    if minimized then
+        -- GUI Tombol Floating
+        floatBtnGui = Instance.new("ScreenGui")
+        floatBtnGui.Name = "OllyUI_Float"
+        floatBtnGui.IgnoreGuiInset = true
+        floatBtnGui.ResetOnSpawn = false
+        floatBtnGui.Parent = game:GetService("CoreGui")
+
+        -- Tombol gambar
+        local floatingButton = Instance.new("ImageButton")
+        floatingButton.Name = "OllyUI_Popup"
+        floatingButton.Size = UDim2.new(0, 48, 0, 48)
+        floatingButton.Position = UDim2.new(0, 80, 0, 80)
+        floatingButton.BackgroundColor3 = Color3.fromRGB(31, 31, 31)
+        floatingButton.Image = "rbxassetid://71039584468574" -- GANTI GAMBAR DI SINI
+        floatingButton.AutoButtonColor = true
+        floatingButton.Parent = floatBtnGui
+
+        -- sudut & stroke
+        local corner = Instance.new("UICorner", floatingButton)
+        corner.CornerRadius = UDim.new(0, 10)
+
+        local stroke = Instance.new("UIStroke", floatingButton)
+        stroke.Thickness = 2
+        stroke.Color = Color3.fromRGB(123, 215, 64)
+        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+        -- drag support
+        local dragging, dragStart, startPos
+        floatingButton.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                dragStart = input.Position
+                startPos = floatingButton.Position
+
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then dragging = false end
+                end)
+            end
+        end)
+
+        game:GetService("UserInputService").InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local delta = input.Position - dragStart
+                floatingButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
+        end)
+
+        -- klik tombol → buka UI
+        floatingButton.MouseButton1Click:Connect(function()
+            minimized = false
+            Content.Visible = true
+            Sidebar.Visible = true
+            MinBtn.Text = "-"
+            if floatBtnGui then floatBtnGui:Destroy() end
+            floatBtnGui = nil
+        end)
+
+    else
+        if floatBtnGui then floatBtnGui:Destroy() end
+        floatBtnGui = nil
+    end
+
+    config._minimized = minimized
+    saveConfig()
+end)
     -- restore minimized state
     if config._minimized then
         minimized = config._minimized
@@ -647,6 +713,41 @@ function OllyUI:Window(title, opts)
         applyTheme(config._theme)
         saveConfig()
     end
+    function WindowAPI:Notify(data)
+    data = data or {}
+    local message = tostring(data.Content or data.Message or "Notification")
+    local duration = data.Duration or 3
+
+    local toast = Make("Frame", {
+        Parent = self._screen,
+        Size = UDim2.new(0,260,0,36),
+        Position = UDim2.new(1,300,1,-80),
+        BackgroundColor3 = Color3.fromRGB(30,30,30),
+        BorderSizePixel = 0
+    })
+
+    local lbl = Make("TextLabel", {
+        Parent = toast,
+        Size = UDim2.new(1,-14,1,0),
+        Position = UDim2.new(0,7,0,0),
+        BackgroundTransparency = 1,
+        Text = message,
+        TextColor3 = Color3.fromRGB(255,255,255),
+        Font = Enum.Font.SourceSansBold,
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left
+    })
+
+    task.wait(0.05)
+
+    toast:TweenPosition(UDim2.new(1,-280,1,-80), "Out", "Quad", 0.25, true)
+
+    task.delay(duration, function()
+        toast:TweenPosition(UDim2.new(1,300,1,-80), "In", "Quad", 0.25, true)
+        task.wait(0.3)
+        toast:Destroy()
+    end)
+end
 
     -- convenience: expose save/load
     function WindowAPI:Save() saveConfig() end
