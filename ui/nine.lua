@@ -1685,6 +1685,11 @@ function Chloex:Window(GuiConfig)
                     ParagraphContent.Text = content
                     UpdateSize()
                 end
+                function ParagraphFunc:SetDesc(content)
+                    content = content or "Content"
+                    ParagraphContent.Text = content
+                    UpdateSize()
+                end
 
                 CountItem = CountItem + 1
                 return ParagraphFunc
