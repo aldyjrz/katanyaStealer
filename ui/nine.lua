@@ -604,6 +604,9 @@ function chloex(msg, delay, color, title, desc)
         Delay = delay or 4
     })
 end
+local isMaximized = false
+local normalSize = isMobile and safeSize(570, 300) or safeSize(640, 400)
+local normalPos = UDim2.new(0.5, 0, 0.5, 0)
 
 function Chloex:Window(GuiConfig)
     GuiConfig              = GuiConfig or {}
@@ -765,6 +768,8 @@ function Chloex:Window(GuiConfig)
     ImageLabel1.Size = UDim2.new(1, -8, 1, -8)
     ImageLabel1.Parent = Close
 
+    
+
     Min.Font = Enum.Font.SourceSans
     Min.Text = ""
     Min.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -789,6 +794,28 @@ function Chloex:Window(GuiConfig)
     ImageLabel2.Position = UDim2.new(0.5, 0, 0.5, 0)
     ImageLabel2.Size = UDim2.new(1, -9, 1, -9)
     ImageLabel2.Parent = Min
+
+    local Max = Instance.new("TextButton")
+    local ImageLabel3 = Instance.new("ImageLabel")
+
+    Max.Font = Enum.Font.SourceSans
+    Max.Text = ""
+    Max.AnchorPoint = Vector2.new(1, 0.5)
+    Max.BackgroundTransparency = 1
+    Max.Position = UDim2.new(1, -68, 0.5, 0) -- Berada di kiri tombol Min
+    Max.Size = UDim2.new(0, 25, 0, 25)
+    Max.Name = "Max"
+    Max.Parent = Top
+
+    ImageLabel3.Image = "rbxassetid://9886659406" -- Icon kotak (Maximize)
+    ImageLabel3.AnchorPoint = Vector2.new(0.5, 0.5)
+    ImageLabel3.BackgroundTransparency = 1
+    ImageLabel3.ImageTransparency = 0.2
+    ImageLabel3.Position = UDim2.new(0.5, 0, 0.5, 0)
+    ImageLabel3.Size = UDim2.new(1, -9, 1, -9)
+    ImageLabel3.Parent = Max
+
+    
 
     LayersTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     LayersTab.BackgroundTransparency = 0.9990000128746033
@@ -890,6 +917,30 @@ function Chloex:Window(GuiConfig)
     ScrollTab.ChildAdded:Connect(UpdateSize1)
     ScrollTab.ChildRemoved:Connect(UpdateSize1)
 
+     function GuiFunc:ToggleMaximize()
+        if not isMaximized then
+            -- Simpan posisi terakhir sebelum maximize (opsional)
+            normalPos = DropShadowHolder.Position
+            
+            -- Animasi membesar ke ukuran layar
+            DropShadowHolder:TweenSizeAndPosition(
+                UDim2.new(1, -20, 1, -20), -- Ukuran hampir full layar
+                UDim2.new(0.5, 0, 0.5, 0),  -- Tengah layar
+                "Out", "Quad", 0.3, true
+            )
+            isMaximized = true
+        else
+            -- Kembalikan ke ukuran semula
+            DropShadowHolder:TweenSizeAndPosition(
+                normalSize,
+                normalPos,
+                "Out", "Quad", 0.3, true
+            )
+            isMaximized = false
+        end
+    end
+
+
     function GuiFunc:DestroyGui()
         if CoreGui:FindFirstChild("Chloeex") then
             Chloeex:Destroy()
@@ -899,6 +950,10 @@ function Chloex:Window(GuiConfig)
     Min.Activated:Connect(function()
         CircleClick(Min, Mouse.X, Mouse.Y)
         DropShadowHolder.Visible = false
+    end)
+    Max.Activated:Connect(function()
+        CircleClick(Max, Mouse.X, Mouse.Y)
+        GuiFunc:ToggleMaximize()
     end)
     Close.Activated:Connect(function()
         CircleClick(Close, Mouse.X, Mouse.Y)
