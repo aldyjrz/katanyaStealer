@@ -605,7 +605,7 @@ function chloex(msg, delay, color, title, desc)
     })
 end
 local isMaximized = false
-local normalSize = isMobile and safeSize(570, 300) or safeSize(640, 400)
+local normalSize = isMobile and UDim2.new(0, 570, 0, 300) or UDim2.new(0, 640, 0, 400)
 local normalPos = UDim2.new(0.5, 0, 0.5, 0)
 
 function Chloex:Window(GuiConfig)
@@ -918,9 +918,11 @@ function Chloex:Window(GuiConfig)
     ScrollTab.ChildRemoved:Connect(UpdateSize1)
 
      function GuiFunc:ToggleMaximize()
-        if not isMaximized then
+        local normalSize = isMobile and UDim2.new(0, 570, 0, 300) or UDim2.new(0, 640, 0, 400)
+         if not isMaximized then
             -- Simpan posisi terakhir sebelum maximize (opsional)
             normalPos = DropShadowHolder.Position
+            
             
             -- Animasi membesar ke ukuran layar
             DropShadowHolder:TweenSizeAndPosition(
