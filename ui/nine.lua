@@ -1289,9 +1289,7 @@ function Chloex:Window(GuiConfig)
             local ChooseFrame = Instance.new("Frame");
             ChooseFrame.BackgroundColor3 = GuiConfig.Color
             ChooseFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-            ChooseFrame.BorderSizePixel = 0
-            ChooseFrame.TextSize = 13
-            ChooseFrame.TextColor3  = Color3.fromRGB(255, 131, 74) 
+            ChooseFrame.BorderSizePixel = 0 
             ChooseFrame.Position = UDim2.new(0, 2, 0, 9)
             ChooseFrame.Size = UDim2.new(0, 1, 0, 12)
             ChooseFrame.Name = "ChooseFrame"
