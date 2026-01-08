@@ -826,8 +826,8 @@ function Chloex:Window(GuiConfig)
 
     NameTab.Font = Enum.Font.GothamBold
     NameTab.Text = ""
-    NameTab.TextColor3 = Color3.fromRGB(255, 255, 255)
-    NameTab.TextSize = 24
+    NameTab.TextColor3 = Color3.fromRGB(255, 131, 74) 
+    NameTab.TextSize = 13
     NameTab.TextWrapped = true
     NameTab.TextXAlignment = Enum.TextXAlignment.Left
     NameTab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -975,7 +975,7 @@ function Chloex:Window(GuiConfig)
         Yes.Text = "Yes"
         Yes.Font = Enum.Font.GothamBold
         Yes.TextSize = 15
-        Yes.TextColor3 = Color3.fromRGB(255, 255, 255)
+        Yes.TextColor3 = Color3.fromRGB(255, 131, 74) 
         Yes.TextTransparency = 0.3
         Yes.ZIndex = 52
         Yes.Name = "Yes"
@@ -1250,7 +1250,7 @@ function Chloex:Window(GuiConfig)
 
         TabButton.Font = Enum.Font.GothamBold
         TabButton.Text = ""
-        TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TabButton.TextColor3 = Color3.fromRGB(255, 131, 74) 
         TabButton.TextSize = 13
         TabButton.TextXAlignment = Enum.TextXAlignment.Left
         TabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -1263,7 +1263,7 @@ function Chloex:Window(GuiConfig)
 
         TabName.Font = Enum.Font.GothamBold
         TabName.Text = "| " .. tostring(TabConfig.Name)
-        TabName.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TabName.TextColor3 = Color3.fromRGB(255, 131, 74) 
         TabName.TextSize = 13
         TabName.TextXAlignment = Enum.TextXAlignment.Left
         TabName.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -1290,6 +1290,8 @@ function Chloex:Window(GuiConfig)
             ChooseFrame.BackgroundColor3 = GuiConfig.Color
             ChooseFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
             ChooseFrame.BorderSizePixel = 0
+            ChooseFrame.TextSize = 13
+            ChooseFrame.TextColor3  = Color3.fromRGB(255, 131, 74) 
             ChooseFrame.Position = UDim2.new(0, 2, 0, 9)
             ChooseFrame.Size = UDim2.new(0, 1, 0, 12)
             ChooseFrame.Name = "ChooseFrame"
