@@ -610,7 +610,7 @@ function Chloex:Window(GuiConfig)
     GuiConfig.Title        = GuiConfig.Title or "Nine Hub"
     GuiConfig.Footer       = GuiConfig.Footer or "Nine Hub - dsc.gg/theninehub"
     GuiConfig.Color        = GuiConfig.Color or Color3.fromRGB(255, 131, 74)
-    GuiConfig["Tab Width"] = GuiConfig["Tab Width"] or 120
+    GuiConfig["Tab Width"] = GuiConfig["Tab Width"] or 160
     GuiConfig.Version      = GuiConfig.Version or 1
 
     CURRENT_VERSION        = GuiConfig.Version
@@ -659,7 +659,7 @@ function Chloex:Window(GuiConfig)
     DropShadowHolder.AnchorPoint = Vector2.new(0.5, 0.5)
     DropShadowHolder.Position = UDim2.new(0.5, 0, 0.5, 0)
     if isMobile then
-        DropShadowHolder.Size = safeSize(470, 270)
+        DropShadowHolder.Size = safeSize(570, 300)
     else
         DropShadowHolder.Size = safeSize(640, 400)
     end
@@ -1220,7 +1220,7 @@ function Chloex:Window(GuiConfig)
         ScrolLayers.Name = "ScrolLayers"
         ScrolLayers.Parent = LayersFolder
 
-        UIListLayout1.Padding = UDim.new(0, 3)
+        UIListLayout1.Padding = UDim.new(0, 4)
         UIListLayout1.SortOrder = Enum.SortOrder.LayoutOrder
         UIListLayout1.Parent = ScrolLayers
 
@@ -1241,7 +1241,7 @@ function Chloex:Window(GuiConfig)
         Tab.BorderColor3 = Color3.fromRGB(0, 0, 0)
         Tab.BorderSizePixel = 0
         Tab.LayoutOrder = CountTab
-        Tab.Size = UDim2.new(1, 0, 0, 30)
+        Tab.Size = UDim2.new(1, 0, 0, 40)
         Tab.Name = "Tab"
         Tab.Parent = ScrollTab
 
@@ -1584,7 +1584,7 @@ function Chloex:Window(GuiConfig)
             function Items:AddParagraph(ParagraphConfig)
                 local ParagraphConfig = ParagraphConfig or {}
                 ParagraphConfig.Title = ParagraphConfig.Title or "Title"
-                ParagraphConfig.Content = ParagraphConfig.Content or "Content"
+                ParagraphConfig.Content = ParagraphConfig.Content or ParagraphConfig.Desc  or "Content"
                 local ParagraphFunc = {}
 
                 local Paragraph = Instance.new("Frame")
