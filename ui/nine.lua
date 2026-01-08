@@ -1241,7 +1241,7 @@ function Chloex:Window(GuiConfig)
         Tab.BorderColor3 = Color3.fromRGB(0, 0, 0)
         Tab.BorderSizePixel = 0
         Tab.LayoutOrder = CountTab
-        Tab.Size = UDim2.new(1, 0, 0, 30)
+        Tab.Size = UDim2.new(1, 0, 0, 25)
         Tab.Name = "Tab"
         Tab.Parent = ScrollTab
 
