@@ -2907,7 +2907,7 @@ function Chloex:Window(GuiConfig)
 
                 -- Status Paragraph
                 local StatusParagraph = Items:AddParagraph({
-                    Title = "Configuration Manager",
+                    Title = "9Hub - Configuration Manager",
                     Content = "Current Config: " .. (CurrentConfigName or "None") .. " | Auto Load: " .. (GetAutoload() or "None"),
                     Icon = "settings"
                 })
@@ -2950,7 +2950,7 @@ function Chloex:Window(GuiConfig)
                                 StatusParagraph:SetContent("Current: " .. selectedConfigName .. " | Autoload: " .. (GetAutoload() or "None"))
                             end
                         else
-                            chloex("Please enter a config name", 3, Color3.fromRGB(255, 131, 74))
+                            chloex("Please enter config name", 3, Color3.fromRGB(255, 131, 74))
                         end
                     end,
                     SubCallback = function()
@@ -2962,7 +2962,7 @@ function Chloex:Window(GuiConfig)
                                 chloex("Failed to load: " .. selectedConfigName, 3, Color3.fromRGB(255, 131, 74))
                             end
                         else
-                            chloex("Please select a config", 3, Color3.fromRGB(255, 131, 74))
+                            chloex("Please select config", 3, Color3.fromRGB(255, 131, 74))
                         end
                     end
                 })
@@ -3030,7 +3030,7 @@ function Chloex:Window(GuiConfig)
                 -- Return functions for external manipulation
                 return {
                     UpdateStatus = function()
-                        StatusParagraph:SetContent("Current: " .. (CurrentConfigName or "None") .. " | Autoload: " .. (GetAutoload() or "None"))
+                        StatusParagraph:SetContent("Current: " .. (CurrentConfigName or "None") .. "\nAutoload: " .. (GetAutoload() or "None"))
                     end,
                     RefreshList = function()
                         local newConfigs = GetConfigList()
