@@ -1,5 +1,5 @@
---// credit: ChloeX
---// modified: .badmagazine
+--// credit: ChloeX 
+--// modified: .badmagazine .aldytoi
 --// NineHub
 
 local HttpService = game:GetService("HttpService")
