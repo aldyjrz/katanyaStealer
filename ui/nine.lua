@@ -610,7 +610,7 @@ function Chloex:Window(GuiConfig)
     GuiConfig.Title        = GuiConfig.Title or "Nine Hub"
     GuiConfig.Footer       = GuiConfig.Footer or "Nine Hub - dsc.gg/theninehub"
     GuiConfig.Color        = GuiConfig.Color or Color3.fromRGB(255, 131, 74)
-    GuiConfig["Tab Width"] = GuiConfig["Tab Width"] or 160
+    GuiConfig["Tab Width"] = GuiConfig["Tab Width"] or 170
     GuiConfig.Version      = GuiConfig.Version or 1
 
     CURRENT_VERSION        = GuiConfig.Version
@@ -1220,7 +1220,7 @@ function Chloex:Window(GuiConfig)
         ScrolLayers.Name = "ScrolLayers"
         ScrolLayers.Parent = LayersFolder
 
-        UIListLayout1.Padding = UDim.new(0, 4)
+        UIListLayout1.Padding = UDim.new(0, 3)
         UIListLayout1.SortOrder = Enum.SortOrder.LayoutOrder
         UIListLayout1.Parent = ScrolLayers
 
@@ -1241,7 +1241,7 @@ function Chloex:Window(GuiConfig)
         Tab.BorderColor3 = Color3.fromRGB(0, 0, 0)
         Tab.BorderSizePixel = 0
         Tab.LayoutOrder = CountTab
-        Tab.Size = UDim2.new(1, 0, 0, 40)
+        Tab.Size = UDim2.new(1, 0, 0, 30)
         Tab.Name = "Tab"
         Tab.Parent = ScrollTab
 
