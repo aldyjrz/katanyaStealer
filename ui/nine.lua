@@ -400,9 +400,9 @@ local Chloex = {}
 function Chloex:MakeNotify(NotifyConfig)
     local NotifyConfig = NotifyConfig or {}
     NotifyConfig.Title = NotifyConfig.Title or "NineHub"
-    NotifyConfig.Description = NotifyConfig.Description or "Notification"
-    NotifyConfig.Content = NotifyConfig.Content or "Content"
-    NotifyConfig.Color = NotifyConfig.Color or Color3.fromRGB(255, 0, 255)
+    NotifyConfig.Description = NotifyConfig.Description or ""
+    NotifyConfig.Content = NotifyConfig.Content or ""
+    NotifyConfig.Color = NotifyConfig.Color or Color3.fromRGB(217, 78, 31)
     NotifyConfig.Time = NotifyConfig.Time or  NotifyConfig.Duration or  0.5
     NotifyConfig.Delay = NotifyConfig.Delay or 5
     local NotifyFunction = {}
@@ -417,8 +417,8 @@ function Chloex:MakeNotify(NotifyConfig)
             local NotifyLayout = Instance.new("Frame");
             NotifyLayout.AnchorPoint = Vector2.new(1, 1)
             NotifyLayout.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            NotifyLayout.BackgroundTransparency = 0.9990000128746033
-            NotifyLayout.BorderColor3 = Color3.fromRGB(0, 0, 0)
+            NotifyLayout.BackgroundTransparency = 0.5
+            NotifyLayout.BorderColor3 = Color3.fromRGB(31, 31, 31)
             NotifyLayout.BorderSizePixel = 0
             NotifyLayout.Position = UDim2.new(1, -30, 1, -30)
             NotifyLayout.Size = UDim2.new(0, 320, 1, 0)
@@ -454,17 +454,17 @@ function Chloex:MakeNotify(NotifyConfig)
         local ImageLabel = Instance.new("ImageLabel");
         local TextLabel2 = Instance.new("TextLabel");
 
-        NotifyFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        NotifyFrame.BackgroundColor3 = Color3.fromRGB(31, 31, 31)
         NotifyFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
         NotifyFrame.BorderSizePixel = 0
         NotifyFrame.Size = UDim2.new(1, 0, 0, 150)
         NotifyFrame.Name = "NotifyFrame"
-        NotifyFrame.BackgroundTransparency = 1
+        NotifyFrame.BackgroundTransparency = 0.5
         NotifyFrame.Parent = CoreGui.NotifyGui.NotifyLayout
         NotifyFrame.AnchorPoint = Vector2.new(0, 1)
         NotifyFrame.Position = UDim2.new(0, 0, 1, -(NotifyPosHeigh))
 
-        NotifyFrameReal.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        NotifyFrameReal.BackgroundColor3 = Color3.fromRGB(31, 31, 31)
         NotifyFrameReal.BorderColor3 = Color3.fromRGB(0, 0, 0)
         NotifyFrameReal.BorderSizePixel = 0
         NotifyFrameReal.Position = UDim2.new(0, 400, 0, 0)
@@ -482,7 +482,7 @@ function Chloex:MakeNotify(NotifyConfig)
         DropShadowHolder.Name = "DropShadowHolder"
         DropShadowHolder.Parent = NotifyFrameReal
 
-        Top.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        Top.BackgroundColor3 = Color3.fromRGB(31, 31, 31)
         Top.BackgroundTransparency = 0.9990000128746033
         Top.BorderColor3 = Color3.fromRGB(0, 0, 0)
         Top.BorderSizePixel = 0
@@ -493,7 +493,7 @@ function Chloex:MakeNotify(NotifyConfig)
         TextLabel.Font = Enum.Font.GothamBold
         TextLabel.Text = NotifyConfig.Title
         TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-        TextLabel.TextSize = 14
+        TextLabel.TextSize = 12
         TextLabel.TextXAlignment = Enum.TextXAlignment.Left
         TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         TextLabel.BackgroundTransparency = 0.9990000128746033
@@ -509,7 +509,7 @@ function Chloex:MakeNotify(NotifyConfig)
         TextLabel1.Font = Enum.Font.GothamBold
         TextLabel1.Text = NotifyConfig.Description
         TextLabel1.TextColor3 = NotifyConfig.Color
-        TextLabel1.TextSize = 14
+        TextLabel1.TextSize = 12
         TextLabel1.TextXAlignment = Enum.TextXAlignment.Left
         TextLabel1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         TextLabel1.BackgroundTransparency = 0.9990000128746033
@@ -522,7 +522,7 @@ function Chloex:MakeNotify(NotifyConfig)
         Close.Font = Enum.Font.SourceSans
         Close.Text = ""
         Close.TextColor3 = Color3.fromRGB(0, 0, 0)
-        Close.TextSize = 14
+        Close.TextSize = 12
         Close.AnchorPoint = Vector2.new(1, 0.5)
         Close.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         Close.BackgroundTransparency = 0.9990000128746033
@@ -1990,7 +1990,8 @@ function Chloex:Window(GuiConfig)
                 ToggleContent.TextXAlignment = Enum.TextXAlignment.Left
                 ToggleContent.TextYAlignment = Enum.TextYAlignment.Bottom
                 ToggleContent.BackgroundTransparency = 1
-                ToggleContent.Size = UDim2.new(1, -100, 0, 12)
+                ToggleContent.Size = UDim2.new(1, -100, 0, 13)
+                
                 ToggleContent.Name = "ToggleContent"
                 ToggleContent.Parent = Toggle
 
