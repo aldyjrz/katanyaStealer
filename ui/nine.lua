@@ -400,7 +400,7 @@ function Chloex:MakeNotify(NotifyConfig)
     NotifyConfig.Description = NotifyConfig.Description or "Notification"
     NotifyConfig.Content = NotifyConfig.Content or "Content"
     NotifyConfig.Color = NotifyConfig.Color or Color3.fromRGB(255, 0, 255)
-    NotifyConfig.Time = NotifyConfig.Time or 0.5
+    NotifyConfig.Time = NotifyConfig.Time or  NotifyConfig.Duration or  0.5
     NotifyConfig.Delay = NotifyConfig.Delay or 5
     local NotifyFunction = {}
     spawn(function()
@@ -1912,7 +1912,7 @@ function Chloex:Window(GuiConfig)
                 local ToggleConfig = ToggleConfig or {}
                 ToggleConfig.Title = ToggleConfig.Title or "Title"
                 ToggleConfig.Title2 = ToggleConfig.Title2 or ""
-                ToggleConfig.Content = ToggleConfig.Content or ""
+                ToggleConfig.Content = ToggleConfig.Content or ToggleConfig.Desc or ""
                 ToggleConfig.Default = ToggleConfig.Default or false
                 ToggleConfig.Callback = ToggleConfig.Callback or function() end
 
@@ -2320,7 +2320,7 @@ function Chloex:Window(GuiConfig)
                 InputConfig.Title = InputConfig.Title or "Title"
                 InputConfig.Content = InputConfig.Content or ""
                 InputConfig.Callback = InputConfig.Callback or function() end
-                InputConfig.Default = InputConfig.Default or ""
+                InputConfig.Default = InputConfig.Default or  InputConfig.Value or ""
 
                 local configKey = "Input_" .. InputConfig.Title
                 if ConfigData[configKey] ~= nil then
@@ -2448,10 +2448,10 @@ function Chloex:Window(GuiConfig)
             function Items:AddDropdown(DropdownConfig)
                 local DropdownConfig = DropdownConfig or {}
                 DropdownConfig.Title = DropdownConfig.Title or "Title"
-                DropdownConfig.Content = DropdownConfig.Content or ""
+                DropdownConfig.Content = DropdownConfig.Content or  DropdownConfig.Desc or ""
                 DropdownConfig.Multi = DropdownConfig.Multi or false
-                DropdownConfig.Options = DropdownConfig.Options or {}
-                DropdownConfig.Default = DropdownConfig.Default or (DropdownConfig.Multi and {} or nil)
+                DropdownConfig.Options = DropdownConfig.Options or DropdownConfig.Values or {}
+                DropdownConfig.Default = DropdownConfig.Default or  DropdownConfig.Value or (DropdownConfig.Multi and {} or nil)
                 DropdownConfig.Callback = DropdownConfig.Callback or function() end
 
                 local configKey = "Dropdown_" .. DropdownConfig.Title
