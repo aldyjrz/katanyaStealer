@@ -1027,15 +1027,20 @@ function Chloex:Window(GuiConfig)
 
         local MainButton = Instance.new("ImageLabel")
         MainButton.Parent = ScreenGui
-        MainButton.Size = UDim2.new(0, 40, 0, 40)
+        MainButton.Size = UDim2.new(0, 50, 0, 50)
         MainButton.Position = UDim2.new(0, 20, 0, 100)
         MainButton.BackgroundTransparency = 1
         MainButton.Image = "rbxassetid://" .. GuiConfig.Image
         MainButton.ScaleType = Enum.ScaleType.Fit
 
         local UICorner = Instance.new("UICorner")
-        UICorner.CornerRadius = UDim.new(0, 6)
+        UICorner.CornerRadius = UDim.new(0, 15)
         UICorner.Parent = MainButton
+
+          local stroke = Instance.new("UIStroke", MainButton)
+            stroke.Thickness = 1.5
+            stroke.Color = Color3.fromRGB(255, 184, 42)
+            stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
         local Button = Instance.new("TextButton")
         Button.Parent = MainButton
