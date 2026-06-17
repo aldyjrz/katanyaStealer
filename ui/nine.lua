@@ -1,18 +1,18 @@
 --// credit: ChloeX 
 --// modified: .badmagazine .aldytoi
---// NineHub
+--// AldyToi
 
 local HttpService = game:GetService("HttpService")
 
-if not isfolder("NineHub") then
-    makefolder("NineHub")
+if not isfolder("AldyToi") then
+    makefolder("AldyToi")
 end
 
 local gameName   = tostring(game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name)
 gameName         = gameName:gsub("[^%w_ ]", "")
 gameName         = gameName:gsub("%s+", "_")
 
-local gameFolder = "NineHub/" .. gameName
+local gameFolder = "AldyToi/" .. gameName
 if not isfolder(gameFolder) then
     makefolder(gameFolder)
 end
@@ -399,7 +399,7 @@ end
 local Chloex = {}
 function Chloex:MakeNotify(NotifyConfig)
     local NotifyConfig = NotifyConfig or {}
-    NotifyConfig.Title = NotifyConfig.Title or "NineHub"
+    NotifyConfig.Title = NotifyConfig.Title or "AldyToi"
     NotifyConfig.Description = NotifyConfig.Description or ""
     NotifyConfig.Content = NotifyConfig.Content or ""
     NotifyConfig.Color = NotifyConfig.Color or Color3.fromRGB(217, 78, 31)
@@ -597,7 +597,7 @@ end
 
 function chloex(msg, delay, color, title, desc)
     return Chloex:MakeNotify({
-        Title = title or "NineHub",
+        Title = title or "AldyToi",
         Description = desc or "Notification",
         Content = msg or "Content",
         Color = color or Color3.fromRGB(255, 131, 74),
@@ -610,8 +610,8 @@ local normalPos = UDim2.new(0.5, 0, 0.5, 0)
 
 function Chloex:Window(GuiConfig)
     GuiConfig              = GuiConfig or {}
-    GuiConfig.Title        = GuiConfig.Title or "Nine Hub"
-    GuiConfig.Footer       = GuiConfig.Footer or "Nine Hub - dsc.gg/theninehub"
+    GuiConfig.Title        = GuiConfig.Title or "AldyToi"
+    GuiConfig.Footer       = GuiConfig.Footer or "AldyToi"
     GuiConfig.Color        = GuiConfig.Color or Color3.fromRGB(255, 131, 74)
     GuiConfig["Tab Width"] = GuiConfig["Tab Width"] or 170
     GuiConfig.Version      = GuiConfig.Version or 1
@@ -1006,7 +1006,7 @@ function Chloex:Window(GuiConfig)
         Title.Position = UDim2.new(0, 0, 0, 4)
         Title.BackgroundTransparency = 1
         Title.Font = Enum.Font.GothamBold
-        Title.Text = "NineHub | Window"
+        Title.Text = "AldyToi | Window"
         Title.TextSize = 22
         Title.TextColor3 = Color3.fromRGB(255, 255, 255)
         Title.ZIndex = 52
